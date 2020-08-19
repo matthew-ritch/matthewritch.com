@@ -1,11 +1,19 @@
 
-
-img { /* img is an inline elem, so there are not margin and spacing values*/
-  display: block; /* this makes these blocks behave like block elements*/
+.topim { /* img is an inline elem, so there are not margin and spacing values*/
+  display: block;
   height: auto;
   margin-left: auto;
   margin-right: auto;
   width: 20%;
+}
+
+img { /* img is an inline elem, so there are not margin and spacing values*/
+  /* display: block;
+  height: auto;
+  margin-left: auto;
+  margin-right: auto;
+  width: 20%; */
+  max-width: 1000px
 }
 
 body {
@@ -19,6 +27,8 @@ a {
 }
 
 .intro-header{
+  margin-left: auto;
+  margin-right: auto;
   text-align: center;
   padding: 20px 0px 0px 0px;
 }
