@@ -32,9 +32,9 @@ img { /* img is an inline elem, so there are not margin and spacing values*/
 }
 
 body {
-  width: 600px;
-  margin: 0 auto;
+  width: auto;
+  margin: 20%;
   background-color: #B4AEC8;
-  padding: 0 20px 20px 20px;
+  padding: 20px;
   border: 5px solid black;
 }
