@@ -1,40 +1,24 @@
-html {
-  font-size: 16px; /* px means "pixels": the base font size is now 10 pixels high  */
-  font-family: 'Noto Serif', serif; /* this should be the rest of the output you got from Google fonts */
-  background-color: #83AE9C;
-}
 
-h1 {
-  font-size: 40px;
-  text-align: center;
-  margin: 0;
-  padding: 20px 0;
-  color: #00539F;
-  text-shadow: 1px 1px 1px black;
-}
-
-h2 {
-  text-align: center;
-  margin:0;
-  padding: 0 0 10px 0;
-}
-
-p, li {
-  font-size: 16px;    
-  line-height: 2;
-  letter-spacing: 1px;
-}
 
 img { /* img is an inline elem, so there are not margin and spacing values*/
   display: block; /* this makes these blocks behave like block elements*/
-  margin: 0 auto; 
-  width: 25%;
+  height: auto;
+  margin-left: auto;
+  margin-right: auto;
+  width: 20%;
 }
 
 body {
   width: auto;
-  margin: 10%;
-  background-color: #B4AEC8;
-  padding: 0 20px;
-  border: 5px solid black;
+  margin: 0 0%;
+  padding: 0 10%;
+}
+
+a {
+  font-weight: bold;
+}
+
+.intro-header{
+  text-align: center;
+  padding: 20px 0px 0px 0px;
 }
