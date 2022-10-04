@@ -1,1 +1,1 @@
-This is my personal website repo, currently under development.
+This is my personal website repo.
