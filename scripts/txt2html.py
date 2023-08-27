@@ -11,6 +11,7 @@ def txt2html(file):
     f = open(file, 'r').read()
     f2 = f.replace('\n', '<br>\n')
     file2 = file.replace('.txt', '.html')
+    file2 = file.replace('','&emsp;')
     open(file2, 'w').write(f2)
 
 if __name__ == '__main__':
