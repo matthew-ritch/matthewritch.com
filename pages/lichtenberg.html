@@ -24,8 +24,8 @@
 
     var rows = 200
     var cols = Math.round(rows * width/height)
-    var pbase = .15
-    var pFact = .5
+    var pbase = .27
+    var pFact = .8
     // init data
     data = []
     for (i=0; i<rows; i++) {
@@ -35,7 +35,7 @@
     }
     plotter(data)
 
-    function start_evolve(event) {
+    async function start_evolve(event) {
         x = event.clientX;
         y = event.clientY;
         row = 1 + rows - Math.round(y / (height/rows))
@@ -43,17 +43,17 @@
         ind = row * cols + col
         data[ind]["p"] = 0
         data[ind]["x"] = 0
-        d3.select("rect[row='"+row+"'][col='"+col+"']").style("fill", "white");
+        d3.select("rect[row='"+row+"'][col='"+col+"']").style("fill", "white").enter();
         // d3.selectAll('rect')[ind].style("fill", "white");
         // d3.selectAll("rect").nodes()[ind].style("fill", "white");
         actives = [data[ind]]
 
-
+        const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
         while (actives.length > 0) {
             //// evolve neighbors to current actives
             // get all neighbors
             possibles = []
-            checker = (i) => ((i>=0)&&(i<rows * cols + cols))&&(data[i].x == 1) ? (data[i].x=3, possibles.push(data[i])) : -1
+            checker = (i) => ((i>=0) && (i<(rows * cols))) && (data[i].x == 1) ? (data[i].x=3, possibles.push(data[i])) : -1
             for (i = 0; i < actives.length; i++) {
                 active = actives[i]
                 // horiz
@@ -66,14 +66,14 @@
                 ind = (active.row+1)*cols + active.col
                 checker(ind)
                 //diag
-                ind = (active.row+1)*cols + active.col + 1
-                checker(ind)
-                ind = (active.row+1)*cols + active.col - 1
-                checker(ind)
-                ind = (active.row-1)*cols + active.col + 1
-                checker(ind)
-                ind = (active.row-1)*cols + active.col - 1
-                checker(ind)
+                // ind = (active.row+1)*cols + active.col + 1
+                // checker(ind)
+                // ind = (active.row+1)*cols + active.col - 1
+                // checker(ind)
+                // ind = (active.row-1)*cols + active.col + 1
+                // checker(ind)
+                // ind = (active.row-1)*cols + active.col - 1
+                // checker(ind)
 
             }
             // check them
@@ -83,20 +83,24 @@
                 if (roll < possibles[i].p) {
                     possibles[i].x = 0
                     possibles[i].p = 0
-                    d3.select("rect[row='"+(possibles[i].row)+"'][col='"+possibles[i].col+"']").style("fill", "white").enter()
+                    rect = d3.select("rect[row='"+(possibles[i].row)+"'][col='"+possibles[i].col+"']")
+                    rect.style("fill", "white").transition();
                     newActives.push(possibles[i])
                 }
                 else {
                     possibles[i].x = 0
                     possibles[i].p = 0
                 }
+
             }
             //// remove current actives 
             actives = newActives
+            await delay(1);
 
         }
 
     }
+
     document.addEventListener("click", start_evolve);
     
     function plotter (data) {
