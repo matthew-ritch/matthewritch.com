@@ -47,10 +47,11 @@
         ind = row * cols + col
         data[ind]["p"] = 0
         data[ind]["x"] = 0
-        d3.select("rect[row='"+row+"'][col='"+col+"']").style("fill", "white").enter();
+        d3.select("rect[row='"+row+"'][col='"+col+"']").style("fill", "white");
         // d3.selectAll('rect')[ind].style("fill", "white");
         // d3.selectAll("rect").nodes()[ind].style("fill", "white");
         actives = [data[ind]]
+        rects = document.querySelectorAll("rect")
 
         const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
         while (actives.length > 0) {
@@ -87,8 +88,10 @@
                 if (roll < possibles[i].p) {
                     possibles[i].x = 0
                     possibles[i].p = 0
-                    rect = d3.select("rect[row='"+(possibles[i].row)+"'][col='"+possibles[i].col+"']")
-                    rect.style("fill", "white").transition();
+                    ind = possibles[i].row*cols + possibles[i].col-1
+                    // rect = d3.select("rect[row='"+(possibles[i].row)+"'][col='"+possibles[i].col+"']")
+                    rect = d3.select(rects[ind])
+                    rect.style("fill", "white");
                     newActives.push(possibles[i])
                 }
                 else {
