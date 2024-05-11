@@ -36,6 +36,9 @@
     plotter(data)
 
     async function start_evolve(event) {
+        var possibles
+        var actives
+        var newActives
         x = event.clientX;
         y = event.clientY;
         row = 1 + rows - Math.round(y / (height/rows))
