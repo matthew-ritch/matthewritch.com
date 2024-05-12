@@ -3,7 +3,7 @@
 
     <head>
         <meta charset="utf-8">
-        <title>Lichtenberg2- Click Around!</title>
+        <title>Lichtenberg- Click Around!</title>
         <meta name="viewport" content="width=device-width, height=device-height initial-scale=1">
     </head>
 
@@ -137,10 +137,10 @@
         .data(data, function(d) {return d.row+':'+d.col;})
         .enter()
         .append("rect")
-            .attr("x", function(d) { return x(d.col) })
-            .attr("y", function(d) { return y(d.row) })
-            .attr("width", x.bandwidth() )
-            .attr("height", y.bandwidth() )
+            .attr("x", function(d) { return x(d.col)-.1 })
+            .attr("y", function(d) { return y(d.row)-.1 })
+            .attr("width", x.bandwidth()+.2 )
+            .attr("height", y.bandwidth()+.2 )
             .attr("row", function (d) { return d.row } )
             .attr("col", function (d) { return d.col } )
             .attr("height", y.bandwidth() )
