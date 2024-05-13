@@ -19,7 +19,7 @@
     var margin = {top: 0, right: 0, bottom: 0, left: 0},
         width = .99*screen.width,
         height = .815*screen.height;
-    var rows = 200
+    var rows = 150
     var cols = Math.round(rows * width/height)
     var pbase = 0
     var pFact = 2
@@ -27,7 +27,7 @@
     data = []
     for (i=0; i<rows; i++) {
         for (j=0; j<cols; j++) {
-            data.push({"row" : i, "col" : j, "p" : pbase+pFact*(1-pbase)*Math.random(), "path" : [], "cost" : 10**30})
+            data.push({"row" : i, "col" : j, "p" : pbase+pFact*(1-pbase)*Math.random(), "path" : [], "cost" : 10**30, "used" : 0})
         }
     }
     plotter(data)
@@ -36,19 +36,15 @@
     var pathColor = d3.scaleLinear()
             .domain([0,20])
             .range(["white", "rgb(1,1,1)"])
-    function find_paths(event) {
-        data = JSON.parse(JSON.stringify(data))
-        d2 = []
-        for (i=0; i<rows; i++) {
-            for (j=0; j<cols; j++) {
-                d2.push({"row" : i, "col" : j, "used":0})
-            }
-        }
+    async function find_paths(event) {
+
         var actives = []
         var newactives = []
         var destinations = []
         var active
         var ind, row, col, x, y 
+        var dat
+        dat = JSON.parse(JSON.stringify(data))
         // find first point
         x = event.clientX;
         y = event.clientY;
@@ -56,16 +52,16 @@
         col = -2 + Math.round(x / (width/cols))
         ind = row * cols + col
         // init
-        data[ind]["cost"] = 0;
-        d2[ind].used = 1
-        // d3.select(rects[ind]).style("fill", "yellow");
-        data.map((x) => {x["md"] = Math.abs(x.row-row) + Math.abs(x.col-col)})
+        dat[ind]["cost"] = 0;
+        dat[ind]["used"] = 1
+        d3.select(rects[ind]).style("fill", "yellow");
+        dat.map((x) => {x["md"] = Math.abs(x.row-row) + Math.abs(x.col-col)})
         actives.push(ind);
-        // pick a random destination for now
+        // pick random destinations for now
         n = 1+6*Math.random()
         for (i=0; i < n; i++){
             rind = Math.round((rows * cols - 1) * Math.random())
-            destinations.push(data[rind])
+            destinations.push(dat[rind])
         }
         maxiter = Math.max(...destinations.map((x) => x.md))
         // d3.select(rects[rind]).style("fill", "yellow");
@@ -73,48 +69,46 @@
         for (i = 0; i < maxiter; i++) {
             //iterate over actives and add their neighbors to actives
             actives.map((active) => {
-                if ((data[active].col>0)&(data[active].col<(cols-1)))
-                inds = [data[active].row*cols + data[active].col-1, data[active].row*cols + data[active].col+1, 
-                        (data[active].row-1)*cols + data[active].col, (data[active].row+1)*cols + data[active].col,
-                        (data[active].row-1)*cols + data[active].col-1, (data[active].row+1)*cols + data[active].col-1,
-                        (data[active].row-1)*cols + data[active].col+1, (data[active].row+1)*cols + data[active].col+1
-                    ]
+                if ((dat[active].col>0)&(dat[active].col<(cols-1))&(dat[active].row>0)&(dat[active].row<(rows-1))){
+                inds = [dat[active].row*cols + dat[active].col-1, dat[active].row*cols + dat[active].col+1, 
+                        (dat[active].row-1)*cols + dat[active].col, (dat[active].row+1)*cols + dat[active].col,
+                        (dat[active].row-1)*cols + dat[active].col-1, (dat[active].row+1)*cols + dat[active].col-1,
+                        (dat[active].row-1)*cols + dat[active].col+1, (dat[active].row+1)*cols + dat[active].col+1
+                    ]}
                 inds.map( (idx) => {
                     if ((idx>=0) && (idx<(rows * cols))) {
-                        newedge = data[idx]
-                        if (d2[idx].used == 0) {
-                            d2[idx].used = 1
+                        newedge = dat[idx]
+                        if (dat[idx].used == 0) {
+                            dat[idx].used = 1
                             actives.push(idx)
                         }
-                        if ((data[active].cost + newedge.p) < newedge.cost) {
-                            newedge.cost = data[active].cost + newedge.p
-                            newedge.path = [...(data[active].path), idx]
+                        if ((dat[active].cost + newedge.p) < newedge.cost) {
+                            newedge.cost = dat[active].cost + newedge.p
+                            newedge.path = [...(dat[active].path), idx]
                         }
                     }
                 })
                 
             })
             newactives = actives.filter((active) => {
-                return i < (10+1.2*data[active].md) 
+                return i < (1.2*dat[active].md) 
             })
             actives = newactives
         }
 
         // display path
         destinations.map((destination) => {
-            for (i=0;i<destination.path.length;i++){
-                plot(destination.path)
-            }
+            plot(destination.path)
         })
     }
     
     document.addEventListener("click", (x) => find_paths(x));
 
-    function plot(path) {
+    async function plot(path) {
         var i
             for (i=0;i<path.length;i++){
                 d3.select(rects[path[i]]).style("fill", "yellow");
-                // await delay(1)
+                await delay(.1)
             }
         }
     function plotter (data) {
