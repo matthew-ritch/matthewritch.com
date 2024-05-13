@@ -4,6 +4,7 @@
   <head>
     <meta charset="utf-8">
     <title>Noise</title>
+    <meta name="viewport" content="width=device-width, height=device-height initial-scale=1">
   </head>
 
     <!-- Load d3.js -->
@@ -71,7 +72,7 @@
 
         // Build color scale
         var myColor = d3.scaleSequential()
-        .interpolator(d3.interpolateInferno)
+        .interpolator(d3.interpolateCubehelixDefault)
         .domain([0,1])
 
         // add the squares
@@ -91,12 +92,17 @@
     plot()
     const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
     async function evolve () {
-
+        var myColor = d3.scaleSequential()
+            .interpolator(d3.interpolateCubehelixDefault)
+            .domain([0,1])
+        // rects = document.querySelectorAll("rect")
+        rects = d3.selectAll("rect")
         while (true) {
-            svg = document.querySelector("svg")
-            svg.remove()
-            plot()
-            await delay(1);
+            // for (i=0;i<(rows*cols);i++){
+            //     rects.style("fill", (x) => myColor(Math.random()) )
+            // }
+            rects.style("fill", (x) => myColor(Math.random()) )
+            await delay(.1);
         }
     }
     document.addEventListener("click", evolve);
