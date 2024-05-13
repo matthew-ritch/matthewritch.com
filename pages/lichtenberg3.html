@@ -58,7 +58,7 @@
         dat.map((x) => {x["md"] = Math.abs(x.row-row) + Math.abs(x.col-col)})
         actives.push(ind);
         // pick random destinations for now
-        n = 1+6*Math.random()
+        n = 3+12*Math.random()
         for (i=0; i < n; i++){
             rind = Math.round((rows * cols - 1) * Math.random())
             destinations.push(dat[rind])
