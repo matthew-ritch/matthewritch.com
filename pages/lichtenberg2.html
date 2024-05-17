@@ -17,8 +17,8 @@
     <script>
     // set the dimensions and margins of the graph
     var margin = {top: 0, right: 0, bottom: 0, left: 0},
-        width = .99*screen.width,
-        height = .815*screen.height;
+        width = .99*window.innerWidth,
+        height = .815*window.innerHeight;
     var rows = 200
     var cols = Math.round(rows * width/height)
     var pbase = 0
@@ -34,7 +34,7 @@
     const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
     rects = document.querySelectorAll("rect")
     var pathColor = d3.scaleLinear()
-            .domain([0,20])
+            .domain([0,15**2])
             .range(["white", "rgb(1,1,1)"])
     async function find_paths(event) {
         d2 = []
@@ -81,7 +81,7 @@
                         if ((data[active].cost + newedge.p) < newedge.cost) {
                             newedge.cost = data[active].cost + newedge.p
                             newedge.path = [...(data[active].path), idx]
-                            d3.select(rects[idx]).style("fill", pathColor(newedge.cost))
+                            d3.select(rects[idx]).style("fill", pathColor(newedge.cost**2))
                         }
                     }
                 })
