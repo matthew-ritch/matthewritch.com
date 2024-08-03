@@ -24,6 +24,11 @@
     var pbase = 0
     var pFact = 2
     // init data
+    function beta(n, j) {
+        var arr = Array.apply(null, Array(10)).map((x)=> Math.random())
+        arr.sort()
+        return arr[j-1]
+    }
     data = []
     for (i=0; i<rows; i++) {
         for (j=0; j<cols; j++) {
@@ -127,7 +132,7 @@
             .select(".domain").remove()
         // Build color scale
         var myColor = d3.scaleLinear()
-            .domain([0,pbase+.1*(1-pbase)])
+            .domain([0,1])
             .range(["white", "rgb(1,1,1)"])
         // add the squares
         svg.selectAll()
