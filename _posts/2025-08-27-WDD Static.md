@@ -3,6 +3,7 @@ layout: post
 title: "Web Dev for Dirtbags Part 1: A simple static site"  
 date: 2025-08-27 10:30:00 -0400  
 categories: blog  
+tags: [web development, nginx, digitalocean, static site, dirtbag]
 ---
 
 I like simple web pages. The simplest web pages are raw, static HTML files served over the internet.  
