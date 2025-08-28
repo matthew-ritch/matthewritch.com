@@ -156,13 +156,10 @@ People won't trust your website if you are not using HTTPS. To serve your websit
 The easiest way to get one is with [Let's Encrypt](https://letsencrypt.org/), which provides free SSL certificates.  
 
 1. Install Certbot on your VPS:  
-
 ```bash
 sudo apt install certbot python3-certbot-nginx
 ```
-
 2. Obtain an SSL certificate:  
-
 ```bash
 sudo certbot --nginx -d your_domain.com -d www.your_domain.com
 ```
@@ -177,27 +174,22 @@ Note where the SSL certificate files are stored (usually in `/etc/letsencrypt/li
 Now that your VPS has your website files, you need to tell it how to serve them to site visitors. We'll use Nginx for this.  
 
 1. Install Nginx on your VPS:  
-
 ```bash
 sudo apt update
 sudo apt install nginx
 ```
-
 2. Create a new Nginx configuration file for your website:  
-
 ```bash
 sudo nano /etc/nginx/sites-available/your_website
 ```
 
 3. Add the following configuration to the file:  
-
 ```nginx
 server {
     listen 80;
     server_name your_domain.com www.your_domain.com;
     return 301 https://$host$request_uri;
 }
-
 server {
     listen 443 ssl;
     server_name your_domain.com www.your_domain.com;
@@ -213,24 +205,16 @@ server {
     }
 }
 ```
-
 Replace `your_domain.com` with your actual domain and set the correct paths to your SSL certificate files.  
-
-
 4. Enable the new site configuration:  
-
 ```bash
 sudo ln -s /etc/nginx/sites-available/your_website /etc/nginx/sites-enabled/
 ```
-
 5. Test the Nginx configuration for syntax errors:  
-
 ```bash
 sudo nginx -t
 ```
-
 6. If the test is successful, restart Nginx:  
-
 ```bash
 sudo systemctl restart nginx
 ```
