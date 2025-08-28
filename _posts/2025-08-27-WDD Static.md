@@ -5,15 +5,6 @@ date: 2025-08-27 10:30:00 -0400
 categories: blog
 ---
 
-<!-- This is a blog post: part 1 of Web Dev for Dirtbags
-Describing how to do static site hosting on digitalocean
-- Domain registration
-- Setting up a vps (digitalocean)
-- Writing a basic HTML page
-- Deploying the HTML page to the VPS
-- Setting up nginx for static file hosting
-This blog page will be served with jekyll -->
-
 # A simple static site
 
 I like simple web pages. The simplest web pages are raw, static HTML files served over the internet. 
@@ -252,6 +243,4 @@ See your registrar's documentation for specific instructions about nameserver. I
 
 Second, on your VPS provider's control panel, update the DNS settings for your domain to point to your VPS's IP address. Your VPS provider should have documentation on how to do this. For DigitalOcean, see [this guide](https://docs.digitalocean.com/products/networking/dns/getting-started/quickstart/).
 
-Now, after a few minutes, your domain should point to your VPS, and you should be able to access your website using your domain name.
-
-# Enjoy!
+Now, after a few minutes, your domain should point to your VPS, and you should be able to access your website using your domain name!
