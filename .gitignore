@@ -2,3 +2,7 @@
 */*/.DS_STORE
 pages/pomes.txt
 blogideas.md 
+Gemfile
+Gemfile.lock
+_layouts/*
+_site/*
