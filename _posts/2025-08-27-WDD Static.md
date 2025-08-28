@@ -1,14 +1,12 @@
 ---
 layout: post  
-title: "Web Dev for Dirtbags Part 1: A simple static site"  
+title: "Web Dev for Dirtbags Part 1: Basics and Static Sites"  
 date: 2025-08-27 10:30:00 -0400  
 categories: blog  
 tags: [web development, nginx, digitalocean, static site, dirtbag]
 ---
 
-# Purpose
-
-I like simple web pages. The simplest web pages are raw, static HTML files served over the internet. 
+## Purpose
 
 1. Learn to host a static webpage under your own domain name on your own server
 2. Gain web deployment skills: 
@@ -19,7 +17,9 @@ I like simple web pages. The simplest web pages are raw, static HTML files serve
 
 Once you have learned these basics, you can move on to learning about dynamic site hosting. For now, let's start simple.
 
-# Static HTML
+## Static HTML
+
+I like simple web pages. The simplest web pages are raw, static HTML files served over the internet. 
 
 Raw files are written directly in HTML and contain all the necessary information to display a web page. Static pages do not change based on user input and will always display the same content.  
 
@@ -42,7 +42,7 @@ Double click that file and your browser will display a simple page. You get the 
 
 There are [plenty of guides](https://www.google.com/search?q=writing+raw+html) out there to help you write and style nice static web pages using HTML and CSS.  
 
-# A basic example  
+## A basic example  
 
 For the rest of this guide, I will assume that you have a web page with three files: `index.html`, `page2.html`, and `style.css`.  
 
@@ -95,7 +95,7 @@ p {
 }
 ```
 
-# Serving  
+## Serving  
 
 Once you are happy with your page, you need to "serve" it so that others can access it as a web page. To do this, we will:  
 
@@ -107,14 +107,14 @@ Once you are happy with your page, you need to "serve" it so that others can acc
 6. Point your domain name to the VPS.
 
 
-## Register a domain name  
+### Register a domain name  
 
 Domain names are just human-readable addresses for your website. When you open a web browser and type in a URL, the browser uses the domain name to locate the server hosting the website and ask it for the page you want to see. Take `https://www.thecleaners.ai` for instance. The domain name is `thecleaners.ai`, and it points to a specific server on the internet.  
   
 Domain names must be registered with a domain name registrar. There are many registrars to choose from, such as Namecheap, GoDaddy, and Google Domains. Simply create an account with one of these registrars, search for a domain name that suits your page, and follow the instructions to register it. You can probably find a suitable one for less than $10.   
 
 
-## Rent a VPS  
+### Rent a VPS  
 
 To serve your website, you need a computer that will sit there waiting for requests from users. You could use your laptop for this, but that means that you would need to keep it on with a reliable internet connection 24/7 and expose its contents to the internet.   
   
@@ -139,7 +139,7 @@ mkdir -p /var/www/your_website
 ```
 
 
-## Deploy your files  
+### Deploy your files  
 
 Next, to serve your website, you need to get your files to the VPS. The most common way is to use `git` and a remote repository on a service like GitHub (free for you, most likely). This allows you to easily update your code in the future.  
 
@@ -163,7 +163,7 @@ unzip site.zip # extract the zip file on the VPS
 Replace `/path/to/your/folderwithallfiles` with the path to the folder with all of your site files, `username` with your VPS username, `vps_ip_address` with the IP address of your VPS, and `/var/www/your_website` with the VPS directory you created to hold the site files.  
 
 
-## Set up SSL  
+### Set up SSL  
 
 People won't trust your website if you are not using HTTPS. To serve your website over HTTPS, you need an SSL certificate.  
 
@@ -183,7 +183,7 @@ Follow the prompts to complete the certificate issuance process.
 Note where the SSL certificate files are stored (usually in `/etc/letsencrypt/live/your_domain.com/`).  
 
 
-## Configure Nginx for static file hosting  
+### Configure Nginx for static file hosting  
 
 Now that your VPS has your website files, you need to tell it how to serve them to site visitors. We'll use Nginx for this.  
 
@@ -199,21 +199,31 @@ sudo nano /etc/nginx/sites-available/your_website
 
 3. Add the following configuration to the file:  
 ```nginx
+# Each server block defines a virtual server's routing behavior
+# This server handles HTTP requests by redirecting them to HTTPS
 server {
+    # HTTP connections come in on port 80
     listen 80;
     server_name your_domain.com www.your_domain.com;
+    # Redirect those HTTP requests to HTTPS
+    # 301 is a permanent redirect code
     return 301 https://$host$request_uri;
 }
+# This server handles HTTPS requests
 server {
+    # HTTPS connections come in on port 443
     listen 443 ssl;
     server_name your_domain.com www.your_domain.com;
-
-    root /var/www/your_website;
-    index index.html;
-
+    # SSL certificate files - tell Nginx where to find proof that the domain is yours
     ssl_certificate /etc/letsencrypt/live/your_domain.com/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/your_domain.com/privkey.pem;
-
+    # Root directory for the website: tells Nginx where to find the files to serve
+    root /var/www/your_website;
+    # Default file to serve
+    index index.html;
+    # Handle all other requests
+    # This makes any file in /var/www/your_website accessible, so make sure not to expose sensitive files
+    # Any file that is not found will return a 404 error
     location / {
         try_files $uri $uri/ =404;
     }
@@ -224,17 +234,18 @@ Replace `your_domain.com` with your actual domain and set the correct paths to y
 ```bash
 sudo ln -s /etc/nginx/sites-available/your_website /etc/nginx/sites-enabled/
 ```
-5. Test the Nginx configuration for syntax errors:  
+This creates a symbolic link between your site's configuration file in `sites-available` and the `sites-enabled` directory, which Nginx uses to determine which sites to serve.
+5. Test the Nginx configuration for syntax errors and fix any errors reported in the output:
 ```bash
 sudo nginx -t
 ```
-6. If the test is successful, restart Nginx:  
+6. If the test is successful, reload Nginx:  
 ```bash
-sudo systemctl restart nginx
+sudo systemctl reload nginx
 ```
 
 
-## Point your domain name to the VPS  
+### Point your domain name to the VPS  
 
 Finally, you need to point your domain name to your VPS's IP address.  
 
