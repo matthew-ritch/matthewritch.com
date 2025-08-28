@@ -231,5 +231,3 @@ See your registrar's documentation for specific instructions about nameserver. I
 Second, on your VPS provider's control panel, update the DNS settings for your domain to point to your VPS's IP address. Your VPS provider should have documentation on how to do this. For DigitalOcean, see [this guide](https://docs.digitalocean.com/products/networking/dns/getting-started/quickstart/).  
 
 Now, after a few minutes, your domain should point to your VPS, and you should be able to access your website using your domain name!
-
-Now, after a few minutes, your domain should point to your VPS, and you should be able to access your website using your domain name!
