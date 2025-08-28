@@ -6,7 +6,20 @@ categories: blog
 tags: [web development, nginx, digitalocean, static site, dirtbag]
 ---
 
-I like simple web pages. The simplest web pages are raw, static HTML files served over the internet.  
+# Purpose
+
+I like simple web pages. The simplest web pages are raw, static HTML files served over the internet. 
+
+1. Learn to host a static webpage under your own domain name on your own server
+2. Gain web deployment skills: 
+    - working with remote servers
+    - registering a domain name and configuring your domain name service
+    - simple SSL setup
+    - basic Nginx configuration
+
+Once you have learned these basics, you can move on to learning about dynamic site hosting. For now, let's start simple.
+
+# Static HTML
 
 Raw files are written directly in HTML and contain all the necessary information to display a web page. Static pages do not change based on user input and will always display the same content.  
 
