@@ -4,3 +4,4 @@ highlighter: rouge
 url: https://matthewritch.com
 plugins:
   - jekyll-sitemap
+  - jekyll-toc

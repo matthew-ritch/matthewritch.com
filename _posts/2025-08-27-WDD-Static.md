@@ -6,7 +6,10 @@ categories: blog
 tags: [web development, nginx, digitalocean, static site, dirtbag]
 ---
 
-## Purpose
+* TOC
+{:toc}
+
+## Purpose: hosting a static webpage
 
 1. Learn to host a static webpage under your own domain name on your own server
 2. Gain web deployment skills: 
@@ -15,7 +18,7 @@ tags: [web development, nginx, digitalocean, static site, dirtbag]
     - simple SSL setup
     - basic Nginx configuration
 
-Once you have learned these basics, you can move on to learning about [dynamic site hosting](https://matthewritch.com{% link _posts/2025-09-02-WDD-Django-React.md %}). For now, let's start simple.
+Once you have learned these basics, you can move on to learning about [dynamic site hosting](https://matthewritch.com{% link _posts/2025-09-02-WDD-Django-React.md %}). Let's start simple.
 
 ## Static HTML
 

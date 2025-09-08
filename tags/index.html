@@ -1,0 +1,63 @@
+---
+layout: default
+title: Tags
+---
+
+<link href="/styles/blogposts.css" rel="stylesheet">
+
+<h1>Tags:</h1>
+<ul id="tag-list">
+  {% assign tags = site.tags | sort %}
+  {% for tag in tags %}
+    <li>
+      <a href="#{{ tag[0] | slugify }}" class="tag-link">{{ tag[0] }}</a> ({{ tag[1].size }})
+    </li>
+  {% endfor %}
+</ul>
+
+<div id="tag-sections" style="margin-top: 2%;">
+  {% assign tags = site.tags | sort %}
+  {% for tag in tags %}
+    <section class="tag-section" id="{{ tag[0] | slugify }}-section">
+      <h2 id="{{ tag[0] | slugify }}">{{ tag[0] }}</h2>
+      <ul>
+        {% for post in tag[1] %}
+          <li>
+            <a href="{{ post.url }}">{{ post.title }}</a>
+          </li>
+        {% endfor %}
+      </ul>
+    </section>
+  {% endfor %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const tagLinks = document.querySelectorAll('.tag-link');
+  const tagSections = document.querySelectorAll('.tag-section');
+
+  function showTag(tagId) {
+    tagSections.forEach(section => {
+      section.style.display = section.id === tagId + '-section' ? 'block' : 'none';
+    });
+  }
+
+  tagLinks.forEach(link => {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      const tagId = this.getAttribute('href').substring(1);
+      showTag(tagId);
+      // Optionally update the hash in the URL
+      window.location.hash = tagId;
+    });
+  });
+
+  // Show all sections by default, or only the one matching the hash
+  const hash = window.location.hash.substring(1);
+  if (hash) {
+    showTag(hash);
+  } else {
+    tagSections.forEach(section => section.style.display = 'block');
+  }
+});
+</script>

@@ -1,12 +1,15 @@
 ---
 layout: post  
 title: "Web Dev for Dirtbags Part 2: Deploying a Django + React Webapp"
-date: 2025-09-02 13:30:00 -0400  
+date: 2025-09-02 08:00:00 -0400  
 categories: blog  
 tags: [web development, nginx, digitalocean, gunicorn, django, react, dirtbag]
 ---
 
-## Purpose
+* TOC
+{:toc}
+
+## Purpose: hosting a dynamic app
 
 We are going to get you off of localhost.
 
@@ -14,12 +17,6 @@ We are going to get you off of localhost.
 2. Gain web deployment skills:
     - Configuring a web server (Nginx) for serving a front end and a back end on the same server
     - Managing application processes (e.g., using Gunicorn)
-
-## Outline for this guide
-
-1. Deploy a Django process
-2. Build your React app
-3. Configure Nginx for serving both
 
 ## Dynamic web pages
 
@@ -43,7 +40,7 @@ I will also assume that you have a Virtual Private Server (VPS) set up and ready
 3. Update your settings.py so your back end can serve requests from your front end
 4. Configure Gunicorn, your Web Server Gateway Interface (WSGI)
 
-### Django: Python environment
+### Python environment
 
 Python comes stock with `venv`, a module for creating lightweight virtual environments. You are running this on a resource-constrained (cheap) VPS, so you should keep your venv lean.
 
@@ -54,13 +51,13 @@ source yourvenv/bin/activate
 pip install -r requirements.txt
 ```
 
-### Configuring Django: namespacing
+### Namespacing
 
 You should namespace all of your back end endpoints with some common prefix so they don't clash with your front end's urls (e.g., `/api/v1/whatever`).
 
 Later, this will allow us to route front-end requests and back-end requests to separate processes more easily. 
 
-### Django: `settings.py`
+### `settings.py`
 
 Because your back end and front end are separate processes and will have their own origins, you will need to configure a few things in your settings.py so your back end can serve requests from your front end. If you do not do these things, then your back end cannot answer requests from your front end.
 
@@ -121,7 +118,7 @@ Django's secret key is used for cryptographic signing. You should set it in a `.
 
 
 
-### Django: Gunicorn
+### Gunicorn
 
 Gunicorn is a popular HTTP server for Python applications such as those built with Django or Flask. It receives HTTP requests from clients, forwards them to the Python process running your app, and forwards the Python app's response to the the client. It can respond to multiple requests concurrently.
 
@@ -145,6 +142,7 @@ To configure `systemd` to manage your Gunicorn process, we will create two files
 
 1. Create a `systemd.socket` file for Gunicorn:
 ```ini
+# filepath: /etc/systemd/system/yoursite.socket
 [Unit]
 Description=gunicorn socket
 # Direct Gunicorn requests to this socket file
@@ -159,6 +157,7 @@ Make sure to replace `yoursite` with the actual name of your project.
 
 2. Create a `systemd.service` file for Gunicorn:
 ```ini
+# filepath: /etc/systemd/system/yoursite.service
 [Unit]
 Description=gunicorn daemon
 # Require the file we created in step 1
@@ -230,7 +229,7 @@ and you should see the HTTP response from your endpoint.
 2. Build your app
 
 
-### React: `npm install`
+### `npm install`
 
 Your resource-constrained VPS will have very little RAM, so you need to keep your environment lean. This is where the super-cheap VPS approach can easily fail. Luckily, we can use the `--production` flag to skip dev dependencies:
 
@@ -244,7 +243,7 @@ We can get around this by using swap. Swap is disk memory that you can use to em
 
 Alternatively, install and build your app on your local machine and then transfer the build artifacts to your VPS.
 
-### React: `npm run build`
+### `npm run build`
 
 Once your dependencies are installed, you can build your React app:
 
@@ -348,14 +347,10 @@ We set up logging for both Nginx and Gunicorn to monitor the requests they are s
 	# ...
 ```
 
-You can access these logs with either `cat` or `tail`:
+You can access these logs with either `cat` or `tail`. For instance:
 ```bash
 # View the last 100 lines of the access log
 tail -n 100 /var/log/nginx/yoursite.access.log
-# View the last 100 lines of the error log
-tail -n 100 /var/log/nginx/yoursite.error.log
-# View the last 100 lines of the Gunicorn access log
-tail -n 100 /var/log/gunicorn/yoursite.access.log
-# View the last 100 lines of the Gunicorn error log
-tail -n 100 /var/log/gunicorn/yoursite.error.log
+# View all of the Gunicorn error log
+cat /var/log/gunicorn/yoursite.error.log
 ```
