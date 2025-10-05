@@ -1,28 +1,22 @@
 ---
 layout: post  
-title: "Supporting Sign-In with Ethereum with Django"
+title: "Hybrid dApps Part 1: Implementing Sign-In with Ethereum in Django"
 date: 2025-10-04 17:00:00 -0400  
 categories: blog  
 tags: [web development, ethereum, evm, siwe, django]
 ---
 
-<!-- Outline
-    - what is SIWE and why would you use it 
-    - in simple terms, SIWE specification detail https://docs.login.xyz/general-information/siwe-overview/eip-4361#specification
-    - why would you use it with django?
-    - breakdown of my implementation
--->
 
 * TOC
 {:toc}
 
-## Why use SIWE?
+## What is SIWE?
 
 [Sign-in With Ethereum](https://docs.login.xyz/) (SIWE) is a method for using Ethereum addresses to authenticate on off-chain services. Implementing SIWE means that your users don't need to create a separate account on your website as long as they already have an address on Ethereum or any other EVM-compatible chain. 
 
 SIWE allows authentication on decentralized apps (dApps), where users must already have an address to transact. Authenticating with that address saves them from needing to manage separate login info.
 
-## The SIWE Method
+### The SIWE Method
 
 SIWE relies on the same public-key cryptography that addresses use to transact on EVM chains. In brief:
 
@@ -39,7 +33,7 @@ SIWE relies on the same public-key cryptography that addresses use to transact o
 3. The user signs the SIWE message with their private key and sends it to the site's login endpoint along with their address.
 4. The server checks the signature to make sure that the true owner of the address sent the signed SIWE message. The server also verifies the message's fields.
 
-## Example Siwe Message
+### An Example SIWE Message
 
 ```
 your-dapp.xyz wants you to sign in with your Ethereum Address:
@@ -94,7 +88,7 @@ We will also need a model for the SIWE message's nonce. This nonce should be sin
 ```python
 # siweauth/models.py
 """
-Database models for the Sign-In with Ethereum (SIWE) authentication system.
+Database models for SIWE
 """
 
 from django.db import models
@@ -314,19 +308,16 @@ def check_siwe(message, signed_message):
         body = str(message.decode())
     else:
         body = message
-    len(body.split("\n")) >= 7
     # Parse message components
     parsed = parse_siwe_message(body)
     if not parsed:
         return None
-    # Validate message components
     # Validate timestamp
     now = datetime.now(parsed["issued_at"].tzinfo)
     if abs((now - parsed["issued_at"]).total_seconds()) > SIWE_MESSAGE_VALIDITY * 60:
         return None
 
     # Validate chain ID
-    # TODO multi-chain support
     if parsed["chain_id"] != SIWE_CHAIN_ID:
         return None
 
@@ -358,12 +349,6 @@ A Django authentication backend is a class that implements two methods, `authent
 
 ```python
 # siweauth/backend.py
-"""
-Custom authentication backend for Sign-In with Ethereum (SIWE).
-
-This module provides an authentication backend that validates SIWE messages
-and signatures to authenticate users by their Ethereum wallet addresses.
-"""
 
 from django.contrib.auth.backends import BaseBackend
 from web3 import Web3
@@ -378,17 +363,13 @@ w3 = Web3()
 class SiweBackend(BaseBackend):
     """
     Authentication backend for Sign-In with Ethereum.
-    
-    This backend validates SIWE messages and signatures to authenticate users
-    by their Ethereum wallet addresses. If a user with the recovered address
-    doesn't exist yet, it creates a new user account.
     """
 
     def authenticate(
         self, request, message: SignableMessage = None, signed_message=None
     ):
         """
-        Authenticate a user via SIWE message and signature.
+        Authenticate a user with SIWE
         
         Args:
             request: The HTTP request
@@ -472,4 +453,4 @@ Testing your SIWE implementation is essential for maintaining security. To get s
 
 ## Conclusion
 
-There you have it, a simple implementation of SIWE for Django! Rig up your frontend to use these login views and you will be off to the races with your hybrid dApp. Your users will be able to log in with Ethereum and use your app without breaking their decentralized flow, but you will still be able to track user info with a performant and scalable centralized database.
+Rig up your frontend to use these login views and you will be off to the races with your hybrid dApp. Your users will be able to log in with Ethereum and use your app without breaking their decentralized flow, but you will still be able to track user info with a performant and scalable centralized database.
