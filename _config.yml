@@ -3,6 +3,17 @@ markdown: kramdown
 highlighter: rouge
 url: https://matthewritch.com
 permalink: pretty
+title: Matthew Ritch
+description: >-
+  Personal website of Matthew Ritch — engineering and product professional.
+author: Matthew Ritch
 plugins:
   - jekyll-sitemap
   - jekyll-toc
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor/bundle
+  - blogideas.txt
+  

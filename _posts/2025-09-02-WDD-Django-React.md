@@ -1,9 +1,10 @@
 ---
 layout: post  
-title: "Web Dev for Dirtbags Part 2: Deploying a Django + React Webapp"
+title: "Web Dev for Dirtbags Part 2: Deploying a Django + React Web App"
 date: 2025-09-02 08:00:00 -0400  
 categories: blog  
 tags: [web development, nginx, digitalocean, gunicorn, django, react, dirtbag]
+excerpt: Learn to host a React + Django web app under your own domain name on your own server.
 ---
 
 * TOC

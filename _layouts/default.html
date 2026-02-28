@@ -3,15 +3,11 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Matthew Ritch</title>
-    <meta name="twitter:title" content="Matthew Ritch">
-    <meta property="og:title" content="Matthew Ritch">
-    <meta property="og:title" content="Matthew Ritch">
-    <meta property="twitter:title" content="Matthew Ritch">
-    <meta property="twitter:card" content="summary">
+    <title>{% if page.title %}{{ page.title }}{% else %}Matthew Ritch{% endif %}</title>
+    <meta name="twitter:image" content="{{ page.image | absolute_url }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="cf-2fa-verify" content="0fab03255b86805">
-    <meta name="description" content="This is the website of Matthew Ritch.">
+    <meta name="description" content="{% if page.excerpt %}{{ page.excerpt | strip_html | strip_newlines | escape }}{% else %}This is the website of Matthew Ritch.{% endif %}">
     <link rel="shortcut icon" type="image/x-icon" href="https://avatars.githubusercontent.com/u/50339375?v=4">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
@@ -27,6 +23,61 @@
         href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700;1,900&amp;display=swap">
     <link href="/styles/newstyle.css" rel="stylesheet">
     <link href="/styles/font.css" rel="stylesheet">
+
+    <link rel="canonical" href="{{ page.url | absolute_url }}">
+
+    {% if page.layout == "post" %}
+      <meta property="og:title" content="{{ page.title }}">
+      <meta property="og:description" content="{{ page.excerpt | strip_html | strip_newlines }}">
+      <meta property="og:type" content="article">
+      <meta property="og:url" content="{{ page.url | absolute_url }}">
+      {% if page.image %}<meta property="og:image" content="{{ page.image | absolute_url }}">{% endif %}
+      <meta name="twitter:title" content="{{ page.title }}">
+      <meta name="twitter:description" content="{{ page.excerpt | strip_html | strip_newlines }}">
+      <meta name="twitter:card" content="summary_large_image">
+      {% if page.image %}<meta name="twitter:image" content="{{ page.image | absolute_url }}">{% endif %}
+      <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "BlogPosting",
+        "headline": {{ page.title | jsonify }},
+        "description": {{ page.excerpt | strip_html | strip_newlines | jsonify }},
+        "datePublished": "{{ page.date | date_to_xmlschema }}",
+        "author": {
+          "@type": "Person",
+          "name": "{{ site.author }}",
+          "url": "{{ site.url }}"
+        },
+        "publisher": {
+          "@type": "Person",
+          "name": "{{ site.author }}",
+          "url": "{{ site.url }}"
+        },
+        "url": "{{ page.url | absolute_url }}"{% if page.image %},
+        "image": "{{ page.image | absolute_url }}"{% endif %}
+      }
+      </script>
+    {% else %}
+      <meta property="og:title" content="{{ page.title | default: site.title }}">
+      <meta property="og:description" content="{{ page.description | default: site.description }}">
+      <meta property="og:type" content="website">
+      <meta property="og:url" content="{{ page.url | absolute_url }}">
+      <meta name="twitter:title" content="{{ page.title | default: site.title }}">
+      <meta name="twitter:card" content="summary">
+    {% endif %}
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "name": "{{ site.author }}",
+      "url": "{{ site.url }}",
+      "sameAs": [
+        "https://github.com/matthew-ritch"
+      ]
+    }
+    </script>
+
 </head>
 
 <body style="display:block" class="">

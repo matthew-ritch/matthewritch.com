@@ -4,6 +4,7 @@ title: "Web Dev for Dirtbags Part 3: VPS Security"
 date: 2025-09-03 08:00:00 -0400  
 categories: blog  
 tags: [web development, nginx, digitalocean, ssh, security, dirtbag]
+excerpt: Learn some easy steps to harden your web server's security.
 ---
 
 <!-- - vps security basics
@@ -20,7 +21,7 @@ tags: [web development, nginx, digitalocean, ssh, security, dirtbag]
 
 ## Purpose: security
 
-You should take a few simple steps to harden your VPS's security. In this guide, I will show you how to:
+You should take a few simple steps to harden your web server's security. In this guide, I will show you how to:
 1. Lock down access with ssh keys, a firewall, and fail2ban for banning vulnerability scanners
 2. Enable unattended upgrades to prevent fresh exploits
 3. Restrict permissions for systemd services and Nginx
@@ -29,15 +30,15 @@ These instructions are for Ubuntu/Debian-based systems. This probably applies to
 
 ## Prerequisites
 
-I will also assume that you have a Virtual Private Server (VPS) set up and ready to serve a website. If you don't have these set up yet, I recommend reading and following my previous posts on serving [static](https://matthewritch.com{% link _posts/2025-08-27-WDD-Static.md %}) and [dynamic](https://matthewritch.com{% link _posts/2025-09-02-WDD-Django-React.md %}) sites.
+I will also assume that you have a web server set up and ready to serve a website. If you don't have these set up yet, I recommend reading and following my previous posts on serving [static](https://matthewritch.com{% link _posts/2025-08-27-WDD-Static.md %}) and [dynamic](https://matthewritch.com{% link _posts/2025-09-02-WDD-Django-React.md %}) sites.
 
 ## Lock down access
 
-Your vps and your users' data can be accessed directly through ssh or indirectly through the pages that you are serving over its ports. Let's close some of those openings.
+Your server and your users' data can be accessed directly through ssh or indirectly through the pages that you are serving over its ports. Let's close some of those openings.
 
 ### ssh keys
 
-To start, let's make sure that your VPS can only be accessed through ssh keys. ssh keys are more secure than username and password logins because they are much harder to brute force or guess. Additionally, they are not transmitted across the network to your remote VPS, so your password cannot be intercepted during transmission.
+To start, let's make sure that your server can only be accessed through ssh keys. ssh keys are more secure than username and password logins because they are much harder to brute force or guess. Additionally, they are not transmitted across the network to your remote VPS, so your password cannot be intercepted during transmission.
 
 To set up ssh key access to your remote machine:
 

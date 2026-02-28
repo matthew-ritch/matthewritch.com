@@ -1,35 +1,56 @@
+---
+permalink: /fun/
+---
 <!DOCTYPE html>
 <html>
 
 <head>
   <meta charset="utf-8">
-  <title>Matthew Ritch</title>
-  <meta name="twitter:title" content="Matthew Ritch">
-  <meta property="og:title" content="Matthew Ritch">
-  <meta property="og:title" content="Matthew Ritch">
-  <meta property="twitter:title" content="Matthew Ritch">
-  <meta property="twitter:card" content="summary">
+  <title>Matthew Ritch – Fun</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="cf-2fa-verify" content="0fab03255b86805">
   <meta name="description" content="This is the website of Matthew Ritch.">
+  <meta property="og:title" content="Matthew Ritch">
+  <meta property="twitter:title" content="Matthew Ritch">
+  <meta property="twitter:card" content="summary">
   <link rel="shortcut icon" type="image/x-icon" href="https://avatars.githubusercontent.com/u/50339375?v=4">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"
-    data-optimized-fonts="true">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
   <link
-    href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700;1,900&amp;display=swap"
-    rel="stylesheet" data-optimized-fonts="true">
-  <link rel="stylesheet"
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap">
-  <link rel="stylesheet"
-    href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700;1,900&amp;display=swap">
+    href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700;1,900&display=swap"
+    rel="stylesheet">
   <link href="../styles/newstyle.css" rel="stylesheet">
   <link href="../styles/font.css" rel="stylesheet">
+  <style>
+    .embed-wrap {
+      position: relative;
+      overflow: hidden;
+      width: 480px;
+      max-width: 100%;
+      min-width: 250px;
+    }
+
+    .embed-wrap iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .embed-wrap.ratio-16-9 {
+      aspect-ratio: 16 / 9;
+    }
+
+    .embed-wrap.ratio-ravis {
+      aspect-ratio: 480 / 430;
+    }
+  </style>
 </head>
 
-<body style="display:block" class="">
+<body style="display:block">
   <div id="__next">
     <div class="flex flex-col md:py-16">
       <div class="flex flex-row items-center flex-none p-4 gap-2 md:flex-col md:items-start">
@@ -40,61 +61,68 @@
         <a class="text-black" href="/blog">Blog</a>
       </div>
       <div class="flex flex-col w-full gap-8">
+
+        <!-- Camera filter (needs more vertical room for the controls bar) -->
         <div class="flex flex-col md:flex-row md:flex-wrap w-full p-4 justify-center gap-4">
           <div class="flex flex-col items-center">
-            <a href="../pages/lichtenberg">Branching growth</a>
-            <div style="resize: horizontal; max-width: 100%; min-width: 250px; aspect-ratio: 16/9;">
-              <iframe class="w-full h-full" style="width: 100%; height: 100%; aspect-ratio: 16/9; min-width: 250px;"
-                src="../pages/lichtenberg" scrolling="no" frameborder="0" allow="picture-in-picture"
-                allowfullscreen></iframe>
-            </div>
-          </div>
-          <div class="flex flex-col items-center">
-            <a href="../pages/lichtenberg2">Slime mold-like growth</a>
-            <div style="resize: horizontal; max-width: 100%; min-width: 250px; aspect-ratio: 16/9;">
-              <iframe class="w-full h-full" style="width: 100%; height: 100%; aspect-ratio: 16/9; min-width: 250px;"
-                src="../pages/lichtenberg2" scrolling="no" frameborder="0" allow="picture-in-picture"
-                allowfullscreen></iframe>
-            </div>
-          </div>
-          <div class="flex flex-col items-center">
-            <a href="../pages/lichtenberg3">Lightning</a>
-            <div style="resize: horizontal; max-width: 100%; min-width: 250px; aspect-ratio: 16/9;">
-              <iframe class="w-full h-full" style="width: 100%; height: 100%; aspect-ratio: 16/9; min-width: 250px;"
-                src="../pages/lichtenberg3" scrolling="no" frameborder="0" allow="picture-in-picture"
-                allowfullscreen></iframe>
+            <a href="/pages/ravis">Ravis — camera filters</a>
+            <div class="embed-wrap ratio-ravis">
+              <iframe src="/pages/ravis" scrolling="no" allow="camera; picture-in-picture" allowfullscreen></iframe>
             </div>
           </div>
         </div>
+
+
+        <!-- Interactive simulations -->
         <div class="flex flex-col md:flex-row md:flex-wrap w-full p-4 justify-center gap-4">
           <div class="flex flex-col items-center">
-            <a href="https://www.youtube.com/embed/yLJ1xryjZsM">Sound viz fun</a>
-            <div style="resize: horizontal; max-width: 100%; min-width: 250px; aspect-ratio: 16/9;">
-              <iframe class="w-full h-full" style="width: 100%; height: 100%; aspect-ratio: 16/9; min-width: 250px;"
-                src="https://www.youtube.com/embed/yLJ1xryjZsM" frameborder="0"
+            <a href="/fun/lichtenberg/">Branching growth</a>
+            <div class="embed-wrap ratio-16-9">
+              <iframe src="/fun/lichtenberg/" scrolling="no" allowfullscreen></iframe>
+            </div>
+          </div>
+          <div class="flex flex-col items-center">
+            <a href="/fun/lichtenberg2/">Slime mold-like growth</a>
+            <div class="embed-wrap ratio-16-9">
+              <iframe src="/fun/lichtenberg2/" scrolling="no" allowfullscreen></iframe>
+            </div>
+          </div>
+          <div class="flex flex-col items-center">
+            <a href="/fun/lichtenberg3/">Lightning</a>
+            <div class="embed-wrap ratio-16-9">
+              <iframe src="/fun/lichtenberg3/" scrolling="no" allowfullscreen></iframe>
+            </div>
+          </div>
+        </div>
+
+        <!-- Videos -->
+        <div class="flex flex-col md:flex-row md:flex-wrap w-full p-4 justify-center gap-4">
+          <div class="flex flex-col items-center">
+            <a href="https://www.youtube.com/watch?v=yLJ1xryjZsM">Sound viz fun</a>
+            <div class="embed-wrap ratio-16-9">
+              <iframe src="https://www.youtube.com/embed/yLJ1xryjZsM"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowfullscreen></iframe>
             </div>
           </div>
           <div class="flex flex-col items-center">
-            <a href="https://www.youtube.com/embed/Q9gpsqd1N00">Wave equation fun</a>
-            <div style="resize: horizontal; max-width: 100%; min-width: 250px; aspect-ratio: 16/9;">
-              <iframe class="w-full h-full" style="width: 100%; height: 100%; aspect-ratio: 16/9; min-width: 250px;"
-                src="https://www.youtube.com/embed/Q9gpsqd1N00" frameborder="0"
+            <a href="https://www.youtube.com/watch?v=Q9gpsqd1N00">Wave equation fun</a>
+            <div class="embed-wrap ratio-16-9">
+              <iframe src="https://www.youtube.com/embed/Q9gpsqd1N00"
                 allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
                 allowfullscreen></iframe>
             </div>
           </div>
           <div class="flex flex-col items-center">
-            <a href="https://www.youtube.com/embed/E_ASXaQP75k">Style transfer fun</a>
-            <div style="resize: horizontal; max-width: 100%; min-width: 250px; aspect-ratio: 16/9;">
-              <iframe class="w-full h-full" style="width: 100%; height: 100%; aspect-ratio: 16/9; min-width: 250px;"
-                src="https://www.youtube.com/embed/E_ASXaQP75k" frameborder="0"
+            <a href="https://www.youtube.com/watch?v=E_ASXaQP75k">Style transfer fun</a>
+            <div class="embed-wrap ratio-16-9">
+              <iframe src="https://www.youtube.com/embed/E_ASXaQP75k"
                 allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
                 allowfullscreen></iframe>
             </div>
           </div>
         </div>
+
       </div>
     </div>
   </div>

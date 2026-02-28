@@ -4,6 +4,7 @@ title: "Web Dev for Dirtbags Part 1: Basics and Static Sites"
 date: 2025-08-27 10:30:00 -0400  
 categories: blog  
 tags: [web development, nginx, digitalocean, static site, dirtbag]
+excerpt: Learn to host a static webpage under your own domain name on your own server.
 ---
 
 * TOC

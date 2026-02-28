@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Ravis</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0a0a0f;
+    color: #e0e0ee;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    gap: 0;
+  }
+
+  /* ── canvas ── */
+  #canvas-wrap {
+    position: relative;
+    flex: 1 1 0;
+    width: 100%;
+    min-height: 0;
+    background: #000;
+    overflow: hidden;
+  }
+
+  #display {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    image-rendering: pixelated;
+    display: block;
+  }
+
+  #overlay-msg {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    background: #0009;
+    font-size: 1rem;
+    color: #aaa;
+  }
+  #overlay-msg.hidden { display: none; }
+
+  #start-btn {
+    padding: 0.6rem 1.4rem;
+    background: #4444aa;
+    border: none;
+    border-radius: 6px;
+    color: #eef;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  #start-btn:hover { background: #5555cc; }
+
+  /* ── controls panel ── */
+  #controls {
+    flex-shrink: 0;
+    width: 100%;
+    background: #0e0e1a;
+    border-top: 1px solid #1e1e33;
+    padding: 0.4rem 0.75rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem 0.75rem;
+  }
+
+  /* filter buttons */
+  #filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+  }
+
+  .f-btn {
+    padding: 0.45rem 0.8rem;
+    background: #1e1e30;
+    border: 1px solid #333355;
+    border-radius: 5px;
+    color: #9090bb;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s, border-color 0.12s;
+    font-family: monospace;
+    letter-spacing: 0.04em;
+    user-select: none;
+  }
+  .f-btn:hover  { background: #2a2a44; color: #cccce8; }
+  .f-btn.active {
+    background: #3a3a6a;
+    border-color: #6666cc;
+    color: #eeeeff;
+  }
+
+  /* divider between filter buttons and sliders */
+  .sep {
+    width: 1px;
+    height: 1.4rem;
+    background: #2a2a44;
+    flex-shrink: 0;
+  }
+
+  /* sliders */
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .slider-row label {
+    font-size: 0.72rem;
+    color: #6666aa;
+    font-family: monospace;
+    flex-shrink: 0;
+  }
+  .slider-row input[type=range] {
+    width: 90px;
+    accent-color: #6666cc;
+    cursor: pointer;
+  }
+  .slider-row .val {
+    width: 3.4rem;
+    text-align: right;
+    font-size: 0.72rem;
+    font-family: monospace;
+    color: #9090cc;
+  }
+
+  /* bottom row (reset + label) */
+  #bottom-row {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin-left: auto;
+  }
+
+  .icon-btn {
+    padding: 0.45rem 0.8rem;
+    background: #1c1c2e;
+    border: 1px solid #333355;
+    border-radius: 5px;
+    color: #8888bb;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: background 0.12s;
+    white-space: nowrap;
+    user-select: none;
+  }
+  .icon-btn:hover { background: #2a2a44; color: #ccccee; }
+
+  kbd {
+    display: inline-block;
+    font-size: 0.6rem;
+    font-family: monospace;
+    background: #12121e;
+    border: 1px solid #333355;
+    border-bottom-width: 2px;
+    border-radius: 3px;
+    padding: 0.05rem 0.3rem;
+    color: #5555aa;
+    line-height: 1.4;
+    vertical-align: middle;
+    user-select: none;
+  }
+  .f-btn kbd {
+    margin-right: 0.3em;
+    font-size: 0.62rem;
+  }
+
+  #filter-label {
+    font-size: 0.72rem;
+    color: #555577;
+    font-family: monospace;
+  }
+
+  @media (max-width: 600px) {
+    #controls {
+      padding: 0.3rem 0.5rem;
+      gap: 0.25rem 0.5rem;
+    }
+    .f-btn {
+      padding: 0.25rem 0.45rem;
+      font-size: 0.68rem;
+    }
+    .f-btn kbd {
+      font-size: 0.52rem;
+    }
+    .icon-btn {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.68rem;
+    }
+    .slider-row input[type=range] {
+      width: 60px;
+    }
+    .slider-row label,
+    .slider-row .val {
+      font-size: 0.62rem;
+    }
+    kbd {
+      font-size: 0.52rem;
+      padding: 0.02rem 0.22rem;
+    }
+    .sep {
+      height: 1rem;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div id="canvas-wrap">
+  <canvas id="display"></canvas>
+  <div id="overlay-msg">
+    <span>Camera not started</span>
+    <button id="start-btn">Enable Camera</button>
+    <span id="err-msg" style="color:#cc5555;font-size:0.8rem;"></span>
+  </div>
+</div>
+
+<div id="controls">
+  <!-- Filter selector -->
+  <div id="filter-row"><!-- populated by JS --></div>
+
+  <div class="sep"></div>
+
+  <!-- h: step size -->
+  <div class="slider-row">
+    <label>h</label>
+    <kbd>q</kbd>
+    <input type="range" id="sl-h" min="0" max="100" value="50" step="1"/>
+    <kbd>e</kbd>
+    <span class="val" id="val-h">—</span>
+  </div>
+
+  <!-- n: frame buffer depth -->
+  <div class="slider-row">
+    <label>n</label>
+    <kbd>a</kbd>
+    <input type="range" id="sl-n" min="3" max="20" value="5" step="1"/>
+    <kbd>d</kbd>
+    <span class="val" id="val-n">5</span>
+  </div>
+
+  <!-- sc: processing resolution scale (%) -->
+  <div class="slider-row">
+    <label>sc</label>
+    <kbd>z</kbd>
+    <input type="range" id="sl-sc" min="5" max="100" value="20" step="1"/>
+    <kbd>c</kbd>
+    <span class="val" id="val-sc">20%</span>
+  </div>
+
+  <div id="bottom-row">
+    <button class="icon-btn" id="capture-btn">⬇ Save <kbd>s</kbd></button>
+    <button class="icon-btn" id="reset-btn">↺ Reset <kbd>r</kbd></button>
+    <span id="filter-label">—</span>
+  </div>
+</div>
+
+<!-- Hidden offscreen canvas for capture -->
+<canvas id="offscreen" style="display:none;"></canvas>
+<!-- Hidden video element for camera feed -->
+<video id="video" autoplay playsinline muted style="display:none;"></video>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// Filter catalogue — mirrors gs[] in mult.py
+// h_range: [min, max] of actual h values (already ×2 from the uniform samples)
+// n_reps : fixed iteration count per filter
+// ─────────────────────────────────────────────────────────────────────────────
+const FILTERS = [
+  { name: 'jaw',   idx: 0, h_range: [1.0,   5   ], n_reps: 3  },
+  { name: 'livch', idx: 1, h_range: [0.2,   5   ], n_reps: 1  },
+  { name: 'power', idx: 2, h_range: [0.01,  .5  ], n_reps: 1  },
+  { name: 'z',     idx: 3, h_range: [0.5,   8   ], n_reps: 15 },
+  { name: 'diff1', idx: 4, h_range: [0.04,0.4 ], n_reps: 1  },
+  { name: 'diff2', idx: 5, h_range: [0.004,0.04 ], n_reps: 1  },
+  { name: 'div1',  idx: 6, h_range: [0.00004,0.0004], n_reps: 1 },
+  { name: 'div2',  idx: 7, h_range: [0.00004,0.0004], n_reps: 1 },
+  { name: 'mul',   idx: 8, h_range: [0.02, 0.20 ], n_reps: 4  },
+];
+
+// Map slider value 0–100 to h using log interpolation over h_range
+function sliderToH(t01, filter) {
+  const [lo, hi] = filter.h_range;
+  if (lo <= 0) return lo + t01 * (hi - lo);   // linear fallback
+  // logarithmic feels more natural across orders of magnitude
+  return Math.exp(Math.log(lo) + t01 * (Math.log(hi) - Math.log(lo)));
+}
+
+function hToLabel(h) {
+  return h < 0.001 ? h.toExponential(2) : h.toPrecision(3);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// State
+// ─────────────────────────────────────────────────────────────────────────────
+let Module = null;       // Emscripten module
+let wasmReady = false;
+let cameraRunning = false;
+let animFrameId = null;
+
+let currentFilter = FILTERS[0];
+let procW = 0, procH = 0;
+let needReinit = false;  // set when N / scale changes
+
+const video    = document.getElementById('video');
+const offscreen= document.getElementById('offscreen');
+const display  = document.getElementById('display');
+const octx     = offscreen.getContext('2d', { willReadFrequently: true });
+const dctx     = display.getContext('2d');
+const overlay  = document.getElementById('overlay-msg');
+const errMsg   = document.getElementById('err-msg');
+const filterLabel = document.getElementById('filter-label');
+
+// Slider elements
+const slH  = document.getElementById('sl-h');
+const slN  = document.getElementById('sl-n');
+const slSc = document.getElementById('sl-sc');
+const valH = document.getElementById('val-h');
+const valN = document.getElementById('val-n');
+const valSc= document.getElementById('val-sc');
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Build filter buttons
+// ─────────────────────────────────────────────────────────────────────────────
+const filterRow = document.getElementById('filter-row');
+FILTERS.forEach((f, i) => {
+  const btn = document.createElement('button');
+  btn.className = 'f-btn' + (f === currentFilter ? ' active' : '');
+  btn.innerHTML = `<kbd>${i + 1}</kbd>${f.name}`;
+  btn.dataset.idx = f.idx;
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.f-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = f;
+    updateHLabel();
+    filterLabel.textContent = f.name;
+  });
+  filterRow.appendChild(btn);
+});
+
+// Activate first one
+filterLabel.textContent = currentFilter.name;
+document.querySelector('.f-btn').classList.add('active');
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Slider listeners
+// ─────────────────────────────────────────────────────────────────────────────
+function updateHLabel() {
+  const t = slH.value / 100;
+  valH.textContent = hToLabel(sliderToH(t, currentFilter));
+}
+slH.addEventListener('input', updateHLabel);
+updateHLabel();
+
+slN.addEventListener('input', () => {
+  valN.textContent = slN.value;
+  needReinit = true;
+});
+
+slSc.addEventListener('input', () => {
+  valSc.textContent = slSc.value + '%';
+  needReinit = true;
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Capture button
+// ─────────────────────────────────────────────────────────────────────────────
+function captureFrame() {
+  if (!wasmReady || procW === 0) return;
+  const outW = video.videoWidth  || 640;
+  const outH = video.videoHeight || 480;
+  const saveCanvas = document.createElement('canvas');
+  saveCanvas.width  = outW;
+  saveCanvas.height = outH;
+  const sctx = saveCanvas.getContext('2d');
+  sctx.imageSmoothingEnabled = false;
+  sctx.drawImage(display, 0, 0, outW, outH);
+  const a = document.createElement('a');
+  a.href = saveCanvas.toDataURL('image/png');
+  a.download = `ravis-${Date.now()}.png`;
+  a.click();
+}
+document.getElementById('capture-btn').addEventListener('click', captureFrame);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Reset button
+// ─────────────────────────────────────────────────────────────────────────────
+document.getElementById('reset-btn').addEventListener('click', () => {
+  if (wasmReady) Module._reset();
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Keyboard shortcuts
+//   1-9  : select filter
+//   q/e  : h slider down/up
+//   a/d  : n slider down/up
+//   z/c  : sc slider down/up
+//   r    : reset buffer
+// ─────────────────────────────────────────────────────────────────────────────
+function nudgeSlider(sl, delta, cb) {
+  const v = Math.min(parseInt(sl.max), Math.max(parseInt(sl.min), parseInt(sl.value) + delta));
+  sl.value = v;
+  cb();
+}
+
+document.addEventListener('keydown', e => {
+  // Don't fire when typing in an actual input
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+  const key = e.key;
+
+  // 1-9 → filter select
+  const fIdx = parseInt(key) - 1;
+  if (!isNaN(fIdx) && fIdx >= 0 && fIdx < FILTERS.length) {
+    document.querySelectorAll('.f-btn')[fIdx].click();
+    return;
+  }
+
+  switch (key) {
+    case 'q': nudgeSlider(slH, -2, updateHLabel);                                               break;
+    case 'e': nudgeSlider(slH,  2, updateHLabel);                                               break;
+    case 'a': nudgeSlider(slN, -1, () => { valN.textContent = slN.value; needReinit = true; }); break;
+    case 'd': nudgeSlider(slN,  1, () => { valN.textContent = slN.value; needReinit = true; }); break;
+    case 'z': nudgeSlider(slSc,-2, () => { valSc.textContent = slSc.value + '%'; needReinit = true; }); break;
+    case 'c': nudgeSlider(slSc, 2, () => { valSc.textContent = slSc.value + '%'; needReinit = true; }); break;
+    case 'r': if (wasmReady) Module._reset(); break;
+    case 's': captureFrame(); break;
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// WASM init / reinit
+// ─────────────────────────────────────────────────────────────────────────────
+function computeProcDims() {
+  const sc   = parseInt(slSc.value) / 100;
+  // Use video intrinsic size if available, else fall back to 640×480 assumption
+  const srcW = video.videoWidth  || 640;
+  const srcH = video.videoHeight || 480;
+  return [Math.max(1, Math.round(srcW * sc)),
+          Math.max(1, Math.round(srcH * sc))];
+}
+
+function reinitWasm() {
+  if (!wasmReady) return;
+  const [w, h] = computeProcDims();
+  const n = parseInt(slN.value);
+  const ret = Module._init(n, w, h);
+  if (ret !== 0) { console.error('WASM init failed'); return; }
+  procW = w; procH = h;
+  offscreen.width = w;
+  offscreen.height= h;
+  display.width   = w;
+  display.height  = h;
+  needReinit = false;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Main animation loop
+// ─────────────────────────────────────────────────────────────────────────────
+function frame() {
+  animFrameId = requestAnimationFrame(frame);
+
+  if (!cameraRunning || !wasmReady) return;
+
+  if (needReinit || procW === 0) {
+    reinitWasm();
+    if (procW === 0) return;
+  }
+
+  // Draw camera to offscreen at processing resolution (also applies H-flip via CSS is off — we do it in C++)
+  octx.drawImage(video, 0, 0, procW, procH);
+  const imgData = octx.getImageData(0, 0, procW, procH);
+
+  // Copy pixel data into WASM input buffer
+  const inPtr = Module._get_input_ptr();
+  Module.HEAPU8.set(imgData.data, inPtr);
+
+  // Run filter
+  const t  = slH.value / 100;
+  const h  = sliderToH(t, currentFilter);
+  Module._process(currentFilter.idx, h, currentFilter.n_reps);
+
+  // Read output buffer and blit to display canvas
+  const outPtr  = Module._get_output_ptr();
+  const outData = Module.HEAPU8.subarray(outPtr, outPtr + procW * procH * 4);
+  const id = new ImageData(new Uint8ClampedArray(outData), procW, procH);
+  dctx.putImageData(id, 0, 0);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Camera start
+// ─────────────────────────────────────────────────────────────────────────────
+document.getElementById('start-btn').addEventListener('click', async () => {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
+      audio: false,
+    });
+    video.srcObject = stream;
+    await video.play();
+    cameraRunning = true;
+    overlay.classList.add('hidden');
+    needReinit = true;   // trigger first init once dims are known
+  } catch (e) {
+    errMsg.textContent = e.message || 'Camera access denied';
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Load WASM module — distort.js must be loaded first (see script tag below)
+// ─────────────────────────────────────────────────────────────────────────────
+function loadWasm() {
+  DistortModule().then(mod => {
+    Module = mod;
+    wasmReady = true;
+    requestAnimationFrame(frame);
+  }).catch(e => {
+    console.error('WASM load failed:', e);
+    document.getElementById('overlay-msg').querySelector('span').textContent =
+      'Failed to load distort.wasm — see console.';
+  });
+}
+</script>
+
+<!-- Load Emscripten glue first, then kick off module init -->
+<script src="distort.js" onload="loadWasm()"></script>
+</body>
+</html>

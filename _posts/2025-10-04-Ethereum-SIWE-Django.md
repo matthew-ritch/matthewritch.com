@@ -4,6 +4,7 @@ title: "Hybrid dApps Part 1: Implementing Sign-In with Ethereum in Django"
 date: 2025-10-04 17:00:00 -0400  
 categories: blog  
 tags: [web development, ethereum, evm, siwe, django]
+excerpt: Learn how and why to implement SIWE in Django.
 ---
 
 
@@ -147,11 +148,10 @@ class SiweUserManager(BaseUserManager):
         """
         if not address:
             raise ValueError("SiweUsers must have an eth address")
-
+        validate_ethereum_address(address)
         user = self.model(
             wallet=address,
         )
-
         user.save(using=self._db)
         return user
 
@@ -257,7 +257,7 @@ def _nonce_is_valid(nonce: str) -> bool:
     n = Nonce.objects.filter(value=nonce).first()
     is_valid = False
     if n is not None:
-        if n.expiration > datetime.now(tz=pytz.UTC):
+        if n.expiration > datetime.datetime.now(tz=pytz.UTC):
             is_valid = True
             n.delete()
     return is_valid
@@ -411,7 +411,55 @@ class SiweBackend(BaseBackend):
             return None
 ```
 
-### SIWE Login View
+Now, register SiweBackend in your settings.py file.
+
+```python
+# your_project/settings.py
+...
+AUTHENTICATION_BACKENDS = [
+    'siweauth.backend.SiweBackend',
+    ...
+]
+...
+```
+
+### SIWE Views
+
+Let's write a view that the front end can call to get a nonce.
+
+```python
+# siweauth/views.py
+
+import datetime
+import pytz
+import secrets
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+from siweauth.models import Nonce
+
+
+@require_http_methods(["GET"])
+def get_nonce(request):
+    """
+    Generate and return a new nonce for SIWE authentication.
+    """
+    now = datetime.datetime.now(tz=pytz.UTC)
+
+    for n in Nonce.objects.filter(expiration__lte=datetime.datetime.now(tz=pytz.UTC)):
+        n.delete()
+    n = Nonce(value=secrets.token_hex(12), expiration=now + datetime.timedelta(hours=3))
+    n.save()
+
+    return JsonResponse({"nonce": n.value})
+```
+
+Here's an example request to this view:
+
+```http
+GET /api/auth/nonce/ HTTP/1.1
+Host: your-dapp.xyz
+```
+
 
 Finally, we need a view that will handle SIWE login requests. This view will call our custom SIWE authentication backend and log the user in if they pass our SIWE verification. Here is a super simple view for this purpose:
 
@@ -421,6 +469,7 @@ from django.contrib.auth import login
 from your_siwe_package import authenticate
 
 def siwe_login_view(request):
+    """Handle SIWE login requests."""
     message = request.POST.get("message")
     signed_message = request.POST.get("signature")
     # This calls your SIWE authentication backend
@@ -441,7 +490,7 @@ Content-Type: application/x-www-form-urlencoded
 message=your_siwe_message&signature=0xYourSignature
 ```
 
-where `your_siwe_message` is the [plaintext SIWE message](#example-siwe-message), and `0xYourSignature` is the signature of that message.
+where `your_siwe_message` is the [plaintext SIWE message](#an-example-siwe-message), and `0xYourSignature` is the signature of that message.
 
 ### Testing your implementation
 
