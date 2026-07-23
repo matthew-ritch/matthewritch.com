@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Akashic &mdash; plausible.io</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+      Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.6;
+    color: #111;
+    background: #fff;
+    padding: 3rem 2rem 6rem;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+  a { color: inherit; }
+  a:hover { color: #000; }
+  ::selection { background: rgba(0,0,0,0.08); }
+
+  /* ── header ── */
+  .hdr { margin-bottom: 3rem; }
+  .hdr-brand {
+    font-size: 14px;
+    opacity: 0.35;
+    margin-bottom: 0.75rem;
+  }
+  .hdr h1 {
+    font-size: 22px;
+    font-weight: 500;
+    line-height: 1.35;
+    margin-bottom: 0.25rem;
+  }
+  .hdr p {
+    font-size: 14px;
+    opacity: 0.4;
+  }
+
+  /* ── score colors (dark-tinted, close to black) ── */
+  .clr-4 { color: #2a7a42; }
+  .clr-3 { color: #2a7a42; }
+  .clr-2 { color: #8a6d2a; }
+  .clr-1 { color: #a33; }
+  .clr-0 { color: #a33; }
+
+  /* ── score row (premise + score) ── */
+  .score-row {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 0.25rem;
+  }
+  .score-block {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── premise ── */
+  .premise {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    font-size: 14px;
+    margin-bottom: 2rem;
+  }
+  .premise-inputs {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 1.2rem;
+    padding-right: 14px;
+  }
+  .premise-inputs::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0.5em;
+    bottom: 0.5em;
+    width: 10px;
+    border: 1px solid rgba(0,0,0,0.25);
+    border-left: none;
+    border-radius: 0 4px 4px 0;
+  }
+  .premise-label {
+    color: rgba(0,0,0,0.55);
+    font-weight: 500;
+    line-height: 1;
+  }
+  .premise-bracket { display: none; }
+  .premise-arrow {
+    width: 24px;
+    height: 1px;
+    background: rgba(0,0,0,0.25);
+    flex-shrink: 0;
+  }
+
+  /* ── headline ── */
+  .headline {
+    font-size: 16px;
+    line-height: 1.55;
+    max-width: 600px;
+    margin-bottom: 0.5rem;
+    font-weight: 400;
+  }
+
+  /* ── tldr ── */
+  .tldr {
+    margin-bottom: 3rem;
+  }
+  .tldr-heading {
+    font-size: 13px;
+    font-weight: 500;
+    opacity: 0.3;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.5rem;
+  }
+  .tldr ul {
+    margin: 0;
+    padding-left: 1.2em;
+    font-size: 15px;
+    line-height: 1.65;
+    opacity: 0.55;
+    max-width: 600px;
+  }
+  .tldr ul li {
+    margin-bottom: 0.35rem;
+    list-style: disc;
+  }
+
+  /* ── overall ── */
+  .overall {
+    font-size: 64px;
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    margin-bottom: 0.25rem;
+  }
+  .overall-sub {
+    font-size: 14px;
+    opacity: 0.35;
+    margin-bottom: 0;
+  }
+
+  /* ── sections ── */
+  .sec {
+    margin-bottom: 0;
+    border-top: 1px solid rgba(0,0,0,0.08);
+  }
+  .sec-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    padding: 1.25rem 0 1rem;
+    cursor: pointer;
+    user-select: none;
+  }
+  .sec-score {
+    font-size: 20px;
+    font-weight: 500;
+    min-width: 1.5rem;
+    text-align: right;
+  }
+  .sec-score-denom {
+    font-size: 13px;
+    font-weight: 400;
+    opacity: 0.3;
+  }
+  .sec-title {
+    font-size: 16px;
+    font-weight: 500;
+  }
+  .toggle-icon {
+    font-size: 14px;
+    font-weight: 400;
+    color: rgba(0,0,0,0.3);
+    line-height: 1;
+    width: 1em;
+    text-align: center;
+    flex-shrink: 0;
+    transition: color 0.1s;
+  }
+  .sec-head .toggle-icon {
+    font-size: 16px;
+    margin-left: 0.25rem;
+  }
+  .sec-body {
+    display: none;
+    padding: 0 0 2rem 2.75rem;
+  }
+  .sec.open .sec-body {
+    display: block;
+  }
+
+  /* ── field diff ── */
+  .fd {
+    border-top: 1px solid rgba(0,0,0,0.06);
+  }
+  .fd:first-child {
+    border-top: none;
+  }
+  .fd-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    padding: 0.5rem 0;
+    cursor: pointer;
+    user-select: none;
+  }
+  .fd-head:hover {
+    opacity: 0.7;
+  }
+  .fd-body {
+    display: none;
+    padding: 0 0 1rem 0;
+  }
+  .fd.open .fd-body {
+    display: block;
+  }
+  .fd-label {
+    font-size: 14px;
+    font-weight: 400;
+    opacity: 0.45;
+    line-height: 1.4;
+  }
+  .fd-st {
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .fd-st-aligned { color: #2a7a42; }
+  .fd-st-minor-drift { color: #8a6d2a; }
+  .fd-st-major-drift { color: #a33; font-weight: 600; }
+  .fd-st-missing-intended { color: #6a4a9a; }
+  .fd-st-missing-implicit { color: #a33; font-weight: 600; }
+  .fd-st-skipped { color: #888; }
+  .fd-st-empty { color: #888; }
+
+  /* ── comparison columns ── */
+  .fd-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+  .fd-col-label {
+    font-size: 11px;
+    font-weight: 500;
+    opacity: 0.3;
+    margin-bottom: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .fd-val {
+    font-size: 15px;
+    line-height: 1.55;
+  }
+  .fd-val ul { margin: 0; padding-left: 1.2em; }
+  .fd-val ul li { margin-bottom: 4px; list-style: disc; font-size: 14px; }
+  .fd-val .kv { width: 100%; font-size: 14px; border-collapse: collapse; }
+  .fd-val .kv th { font-weight: 500; font-size: 11px; opacity: 0.4; text-transform: uppercase; letter-spacing: 0.03em; text-align: left; padding: 4px 12px 4px 0; border-bottom: 1px solid rgba(0,0,0,0.08); white-space: nowrap; }
+  .fd-val .kv td { padding: 4px 12px 4px 0; border-bottom: 1px solid rgba(0,0,0,0.04); vertical-align: top; }
+  .fd-val .kv td:first-child { white-space: nowrap; }
+  .fd-val .empty { opacity: 0.25; font-style: italic; }
+
+  /* ── cog walkthrough grid ── */
+  .cw {
+    display: grid;
+    grid-template-columns: 1.5fr repeat(4, auto);
+    gap: 0;
+    font-size: 13px;
+  }
+  .cw > div {
+    padding: 5px 10px 5px 0;
+    border-bottom: 1px solid rgba(0,0,0,0.04);
+  }
+  .cw-h {
+    font-weight: 500;
+    font-size: 11px;
+    opacity: 0.4;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+  }
+  .cw-pass { color: #16a34a; }
+  .cw-friction { color: #b45309; }
+  .cw-fail { color: #dc2626; }
+  .cw-reason {
+    grid-column: 1 / -1;
+    font-size: 12px;
+    opacity: 0.5;
+    padding: 0 0 6px 12px;
+  }
+
+  /* ── color swatch ── */
+  .swatch {
+    display: inline-block;
+    width: 12px; height: 12px;
+    border-radius: 3px;
+    vertical-align: middle;
+    border: 1px solid rgba(0,0,0,0.15);
+    margin-right: 2px;
+  }
+
+  /* ── note ── */
+  .fd-note {
+    font-size: 14px;
+    opacity: 0.4;
+    line-height: 1.55;
+    max-width: 600px;
+  }
+
+  /* ── citations ── */
+  .cite {
+    font-size: 11px;
+    line-height: 1;
+    vertical-align: super;
+    position: relative;
+  }
+  .cite a {
+    color: #4361ee;
+    text-decoration: underline;
+    text-decoration-color: rgba(67,97,238,0.35);
+    text-underline-offset: 1px;
+    cursor: pointer;
+  }
+  .cite a:hover {
+    color: #3a0ca3;
+    text-decoration-color: #3a0ca3;
+  }
+  .cite-popup {
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1a1a1a;
+    color: #e8e8e8;
+    font-size: 13px;
+    line-height: 1.45;
+    padding: 8px 12px;
+    border-radius: 4px;
+    max-width: 360px;
+    min-width: 160px;
+    width: max-content;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+    z-index: 1000;
+    pointer-events: none;
+    white-space: normal;
+    transition: opacity 0.08s ease;
+  }
+  .cite-popup img {
+    display: block;
+    max-width: 320px;
+    border-radius: 3px;
+    margin-top: 6px;
+  }
+  .cite-popup::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: var(--arrow-left, 50%);
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: #1a1a1a;
+  }
+  .cite-popup.below {
+    bottom: auto;
+    top: calc(100% + 6px);
+  }
+  .cite-popup.below::after {
+    top: auto;
+    bottom: 100%;
+    border-top-color: transparent;
+    border-bottom-color: #1a1a1a;
+  }
+  .cite-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.15);
+    z-index: 999;
+  }
+
+  /* ── sources footnotes ── */
+  .sources {
+    margin-top: 4rem;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(0,0,0,0.08);
+  }
+  .src-block { margin-bottom: 1.5rem; }
+  .src-heading {
+    font-size: 13px;
+    font-weight: 500;
+    opacity: 0.35;
+    margin-bottom: 0.25rem;
+  }
+  .src-list {
+    margin: 0;
+    padding: 0;
+    font-size: 13px;
+    line-height: 1.6;
+    list-style: none;
+  }
+  .src-list li {
+    margin-bottom: 4px;
+    color: rgba(0,0,0,0.5);
+  }
+  .src-cite {
+    font-size: 13px;
+    vertical-align: baseline;
+    line-height: 1;
+  }
+  .src-num {
+    display: inline-block;
+    min-width: 1.5em;
+    text-align: right;
+    margin-right: 0.5em;
+    font-size: 13px;
+  }
+  .src-cite a {
+    display: inline-block;
+    min-width: 1.5em;
+    text-align: right;
+    margin-right: 0.5em;
+    color: #4361ee;
+    text-decoration: underline;
+    text-decoration-color: rgba(67,97,238,0.35);
+    cursor: pointer;
+  }
+  .src-cite a:hover {
+    color: #3a0ca3;
+    text-decoration-color: #3a0ca3;
+  }
+  .src-url {
+    font-size: 12px;
+    opacity: 0.6;
+    text-decoration: underline;
+    text-decoration-color: rgba(0,0,0,0.15);
+  }
+  .sources a { text-decoration: underline; text-decoration-color: rgba(0,0,0,0.15); }
+
+  /* ── footer ── */
+  .ftr {
+    margin-top: 4rem;
+    font-size: 13px;
+    opacity: 0.2;
+  }
+
+  /* ── responsive ── */
+  @media (max-width: 600px) {
+    body { padding: 1.5rem 1rem 4rem; }
+    .fd-pair { grid-template-columns: 1fr; gap: 1rem; }
+    .cite-popup {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      top: auto;
+      transform: none;
+      max-width: 100%; width: 100%;
+      border-radius: 8px 8px 0 0;
+      max-height: 70vh;
+      overflow-y: auto;
+      pointer-events: auto;
+      padding: 16px;
+    }
+    .cite-popup::after { display: none; }
+    .cite-popup img { max-width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <p class="hdr-brand">◈ Akashic</p>
+  <h1>plausible.io</h1>
+  <p>2026-03-16 5:45 PM</p>
+</div>
+
+<div class="score-row">
+  <div class="premise">
+    <div class="premise-inputs">
+      <span class="premise-label">Specification</span>
+      <span class="premise-label">Reality</span>
+    </div>
+    <div class="premise-bracket"></div>
+    <div class="premise-arrow"></div>
+  </div>
+  <div class="score-block">
+    <div class="overall clr-4">3.5<span style="font-size:24px;opacity:0.25"> / 4</span></div>
+    <p class="overall-sub">overall alignment</p>
+  </div>
+</div>
+<p class="headline">Ships privacy-first simplicity as promised, but downplays open-source positioning.</p>
+
+<div class="tldr"><p class="tldr-heading">Key findings</p><ul><li>Product omits open-source messaging from spec</li><li>Privacy emphasis stronger than simplicity emphasis</li><li>Adds detailed usability analysis not in spec</li><li>Core dashboard experience perfectly aligned</li></ul></div>
+<section class="sec" id="product_identity">
+  <div class="sec-head" data-section="product_identity">
+    <span class="sec-score clr-3">3<span class="sec-score-denom">/4</span></span>
+    <span class="sec-title">Product Identity</span>
+    <span class="toggle-icon">+</span>
+  </div>
+  <div class="sec-body"><div class="fd" data-status="aligned"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Jtbd</span><span class="fd-st fd-st-aligned">aligned</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val">Minimize the time it takes to discover actionable website traffic insights without compromising visitor privacy</div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val">Minimize the time it takes to view essential website analytics data <sup class="cite"><a href="https://plausible.io/plausible.io" target="_blank" rel="noopener" data-detail='Dashboard shows key metrics: 277k unique visitors, 469k total visits, 1.8M pageviews, bounce rate, visit duration' data-thumb='screenshots/001_Plausible_Analytics__Live_Demo.png'>[▣1]</a></sup> without compromising visitor privacy <sup class="cite"><a href="https://plausible.io/" target="_blank" rel="noopener" data-detail='Homepage states &#39;No cookies, just insights. Made and hosted in EU&#39;' data-thumb='screenshots/003_Plausible_Analytics___Simple__privacy-fr.png'>[▣2]</a></sup></div></div></div><p class="fd-note">Same privacy goal; spec says 'discover insights,' product says 'view data.'</p></div></div><div class="fd" data-status="minor_drift"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Description</span><span class="fd-st fd-st-minor-drift">minor drift</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val">An open-source, privacy-first web analytics platform built as a deliberate alternative to Google Analytics <sup class="cite"><a href="#src-i1" data-detail='Plausible Analytics is an open-source, privacy-first web analytics platform built as a deliberate alternative to Google Analytics'>[1]</a></sup></div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val">Plausible is a privacy-friendly web analytics tool that provides essential website metrics in a single dashboard view <sup class="cite"><a href="https://plausible.io/plausible.io" target="_blank" rel="noopener" data-detail='Live demo dashboard displays all essential metrics on single page view' data-thumb='screenshots/004_Plausible_Analytics__Live_Demo.png'>[▣3]</a></sup></div></div></div><p class="fd-note">Product omits 'open-source' and 'deliberate alternative' positioning from spec.</p></div></div><div class="fd" data-status="aligned"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Anti Goals</span><span class="fd-st fd-st-aligned">aligned</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val"><ul><li>NOT complex multi-page analytics dashboards</li><li>NOT personal data collection</li><li>NOT advertising-funded business model</li><li>NOT venture capital backed</li><li>NOT requiring GDPR consent</li></ul></div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val"><ul><li>NOT a comprehensive data exploration tool — no drill-down reports, segmentation, or advanced filtering visible in the main interface <sup class="cite"><a href="https://plausible.io/plausible.io" target="_blank" rel="noopener" data-detail='Dashboard interface shows no drill-down options, just tabbed views for Sources, Pages, Countries'>[4]</a></sup></li><li>NOT a cookie-based tracker — explicitly positions as 'No cookies, just insights' <sup class="cite"><a href="https://plausible.io/" target="_blank" rel="noopener" data-detail='Homepage tagline emphasizes &#39;No cookies, just insights&#39;'>[5]</a></sup></li><li>NOT a Google Analytics replacement with feature parity — focuses on 'essential' metrics only <sup class="cite"><a href="https://plausible.io/" target="_blank" rel="noopener" data-detail='Homepage describes as &#39;lightweight analytics&#39; not comprehensive analytics'>[6]</a></sup></li><li>NOT a complex enterprise analytics platform — single-page dashboard with basic metrics <sup class="cite"><a href="https://plausible.io/plausible.io" target="_blank" rel="noopener" data-detail='All key metrics visible on single dashboard page without navigation'>[7]</a></sup></li></ul></div></div></div><p class="fd-note">Different phrasing but same intent: simplicity over complexity, privacy over tracking.</p></div></div></div>
+</section>
+<section class="sec" id="target_user">
+  <div class="sec-head" data-section="target_user">
+    <span class="sec-score clr-4">4<span class="sec-score-denom">/4</span></span>
+    <span class="sec-title">Target User</span>
+    <span class="toggle-icon">+</span>
+  </div>
+  <div class="sec-body"><div class="fd" data-status="aligned"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Role</span><span class="fd-st fd-st-aligned">aligned</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val">Website owners and developers <sup class="cite"><a href="#src-i2" data-detail='Website owners and developers who want meaningful traffic data without participating in surveillance capitalism. Small to mid-size teams, indie developers, content creators, and privacy-conscious organizations'>[2]</a></sup></div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val">Website owner or digital marketer</div></div></div><p class="fd-note">Product adds 'digital marketer' but maintains same core audience.</p></div></div><div class="fd" data-status="aligned"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Work Context</span><span class="fd-st fd-st-aligned">aligned</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val">Small to mid-size teams, indie developers, content creators, and privacy-conscious organizations <sup class="cite"><a href="#src-i2" data-detail='Website owners and developers who want meaningful traffic data without participating in surveillance capitalism. Small to mid-size teams, indie developers, content creators, and privacy-conscious organizations'>[2]</a></sup></div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val">Small to medium websites requiring basic traffic insights</div></div></div><p class="fd-note">Both target small-to-medium scale; different angle but same market.</p></div></div><div class="fd" data-status="aligned"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Tech Level</span><span class="fd-st fd-st-aligned">aligned</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val">Semi-technical</div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val">Semi-technical</div></div></div></div></div><div class="fd" data-status="aligned"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Domain</span><span class="fd-st fd-st-aligned">aligned</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val">Web development and digital marketing</div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val">Basic web analytics and privacy regulations</div></div></div><p class="fd-note">Product emphasizes privacy regulations; spec includes web development too.</p></div></div><div class="fd" data-status="minor_drift"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Reading Level</span><span class="fd-st fd-st-minor-drift">minor drift</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val">College</div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val">9-12</div></div></div><p class="fd-note">Spec assumes college level; product targets high school level.</p></div></div></div>
+</section>
+<section class="sec" id="value_hierarchy">
+  <div class="sec-head" data-section="value_hierarchy">
+    <span class="sec-score clr-3">3<span class="sec-score-denom">/4</span></span>
+    <span class="sec-title">Value Hierarchy</span>
+    <span class="toggle-icon">+</span>
+  </div>
+  <div class="sec-body"><div class="fd" data-status="minor_drift"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Value Prop</span><span class="fd-st fd-st-minor-drift">minor drift</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val">Simple, not simplified - everything on a single page with metrics you actually act on, nothing else <sup class="cite"><a href="#src-i3" data-detail='Simple, not simplified. Google Analytics has 125+ navigation items across 40+ subsections tracking 290+ metrics. Plausible puts everything on a single page — the metrics you actually act on, nothing else'>[3]</a></sup></div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val">Get essential website analytics without cookies or privacy concerns <sup class="cite"><a href="https://plausible.io/" target="_blank" rel="noopener" data-detail='Main value proposition: &#39;Easy to use and privacy-friendly Google Analytics alternative&#39;'>[8]</a></sup></div></div></div><p class="fd-note">Spec emphasizes simplicity; product emphasizes privacy and cookies.</p></div></div><div class="fd" data-status="aligned"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Per Page</span><span class="fd-st fd-st-aligned">aligned</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val"><table class="kv"><tr><th>Page</th><th>Primary Element</th><th>User Action</th></tr><tr><td>Dashboard</td><td>Traffic overview with unique visitors, sessions, pageviews, bounce rate, visit duration <sup class="cite"><a href="#src-i4" data-detail='Traffic overview: unique visitors, sessions, pageviews, bounce rate, visit duration'>[4]</a></sup></td><td>View all analytics data without navigating submenus</td></tr></table></div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val"><table class="kv"><tr><th>Page</th><th>Primary Element</th><th>User Action</th></tr><tr><td>Homepage</td><td>Start free trial button</td><td>Begin trial signup</td></tr><tr><td>Live Demo Dashboard</td><td>Metrics cards showing visitor stats</td><td>Review analytics data</td></tr><tr><td>Registration</td><td>Start my free trial button</td><td>Create account</td></tr></table></div></div></div><p class="fd-note">Product shows trial flow; spec focuses on dashboard experience.</p></div></div><div class="fd" data-status="minor_drift"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Feature Stack</span><span class="fd-st fd-st-minor-drift">minor drift</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val"><table class="kv"><tr><th>Feature</th><th>Prominence</th><th>Clicks</th><th>Kano</th></tr><tr><td>Single-page dashboard</td><td>high</td><td>0</td><td>must-have</td></tr><tr><td>Privacy-first tracking</td><td>high</td><td>?</td><td>must-have</td></tr><tr><td>75x lighter script</td><td>high</td><td>?</td><td>performance</td></tr><tr><td>Goals and events tracking</td><td>med</td><td>?</td><td>performance</td></tr><tr><td>Revenue tracking</td><td>med</td><td>?</td><td>performance</td></tr></table></div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val"><table class="kv"><tr><th>Feature</th><th>Prominence</th><th>Clicks</th><th>Kano</th></tr><tr><td>Real-time visitor dashboard</td><td>high</td><td>1</td><td>must-have</td></tr><tr><td>Traffic source analysis</td><td>high</td><td>2</td><td>performance</td></tr><tr><td>Page performance tracking</td><td>medium</td><td>2</td><td>performance</td></tr><tr><td>Geographic visitor data</td><td>medium</td><td>2</td><td>performance</td></tr><tr><td>Goal tracking</td><td>low</td><td>2</td><td>delighter</td></tr><tr><td>Funnel analysis</td><td>low</td><td>2</td><td>delighter</td></tr></table></div></div></div><p class="fd-note">Different features listed but same core concept: simple dashboard.</p></div></div><div class="fd" data-status="missing_intended"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Color Semantics</span><span class="fd-st fd-st-missing-intended">not in spec</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val"><span class="empty">&mdash;</span></div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val"><table class="kv"><tr><th>Color</th><th>Meaning</th></tr><tr><td><span class="swatch" style="background:purple"></span> purple</td><td>Primary brand color and action buttons <sup class="cite"><a href="https://plausible.io/" target="_blank" rel="noopener" data-detail='Purple brand color used for Plausible logo and primary action buttons'>[9]</a></sup></td></tr><tr><td><span class="swatch" style="background:blue"></span> blue</td><td>Data visualization charts and links <sup class="cite"><a href="https://plausible.io/plausible.io" target="_blank" rel="noopener" data-detail='Blue/purple gradient used in analytics chart visualization'>[10]</a></sup></td></tr><tr><td><span class="swatch" style="background:gray"></span> gray</td><td>Secondary text and inactive states <sup class="cite"><a href="https://plausible.io/plausible.io" target="_blank" rel="noopener" data-detail='Gray text used for secondary metrics like percentages and labels'>[11]</a></sup></td></tr><tr><td><span class="swatch" style="background:green"></span> green</td><td>Positive metrics and growth indicators <sup class="cite"><a href="https://plausible.io/plausible.io" target="_blank" rel="noopener" data-detail='Green arrows and positive indicators for metric changes'>[12]</a></sup></td></tr></table></div></div></div><p class="fd-note">Product documents color system not mentioned in spec.</p></div></div></div>
+</section>
+<section class="sec" id="workflows">
+  <div class="sec-head" data-section="workflows">
+    <span class="sec-score clr-3">3<span class="sec-score-denom">/4</span></span>
+    <span class="sec-title">Workflows</span>
+    <span class="toggle-icon">+</span>
+  </div>
+  <div class="sec-body"><div class="fd" data-status="aligned"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Journeys</span><span class="fd-st fd-st-aligned">aligned</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val"><table class="kv"><tr><th>Journey</th><th>Steps</th><th>Success State</th></tr><tr><td>Getting started</td><td>Paste single script tag into HTML → View analytics data on dashboard</td><td>Analytics tracking is active and data is visible</td></tr><tr><td>Trial evaluation</td><td>Start free 30-day trial without credit card → Install alongside existing analytics → Compare data and experience</td><td>Decision made to continue or discontinue service</td></tr></table></div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val"><table class="kv"><tr><th>Journey</th><th>Steps</th><th>Success State</th></tr><tr><td>View website analytics</td><td>Access demo dashboard → Review key metrics → Explore traffic sources → Check page performance</td><td>User understands their website traffic patterns</td></tr><tr><td>Start using Plausible</td><td>Visit homepage → Click Start free trial → Enter registration details → Submit trial signup</td><td>User has active Plausible account</td></tr><tr><td>Install tracking</td><td>Access documentation → Find integration guide → Copy tracking code → Add to website</td><td>Plausible tracking is active on user's website</td></tr></table></div></div></div><p class="fd-note">Product splits spec's 'getting started' into separate demo and setup journeys.</p></div></div><div class="fd" data-status="missing_intended"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Cog Walkthrough</span><span class="fd-st fd-st-missing-intended">not in spec</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val"><span class="empty">&mdash;</span></div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val"><div class="cw"><div class="cw-h">Step</div><div class="cw-h">Try</div><div class="cw-h">See</div><div class="cw-h">Link</div><div class="cw-h">Progress</div><div>Visit homepage</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div>Find Start free trial</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div>View live demo</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div>Navigate to registration</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div>Complete registration form</div><div class="cw-friction">Friction</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div class="cw-reason">Form requires email, password, and site URL but no indication of what happens after submission</div><div>Access documentation</div><div class="cw-friction">Friction</div><div class="cw-friction">Friction</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div class="cw-reason">Docs link not prominently placed in main navigation</div><div>Find integration guide</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div>Switch between dashboard views</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div>Filter analytics data</div><div class="cw-friction">Friction</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div class="cw-friction">Friction</div><div class="cw-reason">Filter button present but filtering options and results not immediately clear</div></div></div></div></div><p class="fd-note">Product includes detailed usability assessment not in spec.</p></div></div><div class="fd" data-status="missing_intended"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Friction Map</span><span class="fd-st fd-st-missing-intended">not in spec</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val"><span class="empty">&mdash;</span></div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val"><table class="kv"><tr><td>Visit homepage</td><td>zero</td></tr><tr><td>Find Start free trial</td><td>zero</td></tr><tr><td>View live demo</td><td>zero</td></tr><tr><td>Navigate to registration</td><td>zero</td></tr><tr><td>Complete registration form</td><td>acceptable</td></tr><tr><td>Access documentation</td><td>acceptable</td></tr><tr><td>Find integration guide</td><td>zero</td></tr><tr><td>Switch between dashboard views</td><td>zero</td></tr><tr><td>Filter analytics data</td><td>acceptable</td></tr></table></div></div></div><p class="fd-note">Product maps friction levels for key actions not in spec.</p></div></div></div>
+</section>
+<section class="sec" id="onboarding">
+  <div class="sec-head" data-section="onboarding">
+    <span class="sec-score clr-4">4<span class="sec-score-denom">/4</span></span>
+    <span class="sec-title">Onboarding</span>
+    <span class="toggle-icon">+</span>
+  </div>
+  <div class="sec-body"><div class="fd" data-status="aligned"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">First Minute</span><span class="fd-st fd-st-aligned">aligned</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val">User understands they get all analytics data on one page without complexity <sup class="cite"><a href="#src-i5" data-detail='Plausible puts everything on a single page — the metrics you actually act on, nothing else'>[5]</a></sup></div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val">User sees a clean analytics dashboard with essential metrics and understands this is a privacy-friendly Google Analytics alternative <sup class="cite"><a href="https://plausible.io/plausible.io" target="_blank" rel="noopener" data-detail='Live demo immediately shows working analytics dashboard'>[13]</a></sup></div></div></div><p class="fd-note">Both emphasize dashboard simplicity; product adds privacy-alternative positioning.</p></div></div><div class="fd" data-status="aligned"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Time To Value</span><span class="fd-st fd-st-aligned">aligned</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val">Immediate - no training required, no custom reports to configure <sup class="cite"><a href="#src-i6" data-detail='No training required, no custom reports to configure'>[6]</a></sup></div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val">View live demo dashboard with real analytics data</div></div></div><p class="fd-note">Both describe immediate value; product specifies live demo mechanism.</p></div></div><div class="fd" data-status="missing_intended"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Time To Value Clicks</span><span class="fd-st fd-st-missing-intended">not in spec</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val"><span class="empty">&mdash;</span></div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val">1</div></div></div><p class="fd-note">Product specifies 1 click to demo; spec doesn't quantify.</p></div></div><div class="fd" data-status="aligned"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Assessment</span><span class="fd-st fd-st-aligned">aligned</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val">Minimal friction onboarding with single script installation and no configuration required <sup class="cite"><a href="#src-i7" data-detail='Install: paste a single script tag into your HTML. No configuration required'>[7]</a></sup></div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val">Immediate value through live demo, but guided setup for own site requires technical implementation knowledge</div></div></div><p class="fd-note">Both note easy demo but implementation complexity gap.</p></div></div></div>
+</section>
+<section class="sec" id="emotional_register">
+  <div class="sec-head" data-section="emotional_register">
+    <span class="sec-score clr-4">4<span class="sec-score-denom">/4</span></span>
+    <span class="sec-title">Emotional Register</span>
+    <span class="toggle-icon">+</span>
+  </div>
+  <div class="sec-body"><div class="fd" data-status="aligned"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Primary Emotion</span><span class="fd-st fd-st-aligned">aligned</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val">Calm</div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val">Confident</div></div></div><p class="fd-note">Calm vs confident are compatible; both convey control and ease.</p></div></div><div class="fd" data-status="aligned"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Feels Like</span><span class="fd-st fd-st-aligned">aligned</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val">Simple and straightforward analytics without surveillance or complexity</div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val">Having a clean, focused dashboard that shows exactly what you need to know about website traffic without overwhelming detail or privacy guilt <sup class="cite"><a href="https://plausible.io/plausible.io" target="_blank" rel="noopener" data-detail='Clean single-page dashboard layout with essential metrics prominently displayed'>[14]</a></sup></div></div></div><p class="fd-note">Same core feeling: simple, clear analytics without overwhelming complexity.</p></div></div><div class="fd" data-status="aligned"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Does Not Feel Like</span><span class="fd-st fd-st-aligned">aligned</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val">Overwhelming Google Analytics with 125+ navigation items and 290+ metrics <sup class="cite"><a href="#src-i8" data-detail='Google Analytics has 125+ navigation items across 40+ subsections tracking 290+ metrics'>[8]</a></sup></div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val">Does not feel like Google Analytics with its complex interface and multiple report views — everything important is visible on one page <sup class="cite"><a href="https://plausible.io/plausible.io" target="_blank" rel="noopener" data-detail='Simple tabbed interface contrasts with Google Analytics multi-level navigation'>[15]</a></sup></div></div></div><p class="fd-note">Both contrast with Google Analytics complexity; same anti-pattern.</p></div></div></div>
+</section>
+
+
+<div class="sources">
+  <div class="src-block"><p class="src-heading">Specification sources</p><ul class="src-list"><li id="src-i1"><span class="src-num">1</span> Plausible Analytics is an open-source, privacy-first web analytics platform built as a deliberate alternative to Google Analytics</li><li id="src-i2"><span class="src-num">2</span> Website owners and developers who want meaningful traffic data without participating in surveillance capitalism. Small to mid-size teams, indie developers, content creators, and privacy-conscious organizations</li><li id="src-i3"><span class="src-num">3</span> Simple, not simplified. Google Analytics has 125+ navigation items across 40+ subsections tracking 290+ metrics. Plausible puts everything on a single page — the metrics you actually act on, nothing else</li><li id="src-i4"><span class="src-num">4</span> Traffic overview: unique visitors, sessions, pageviews, bounce rate, visit duration</li><li id="src-i5"><span class="src-num">5</span> Plausible puts everything on a single page — the metrics you actually act on, nothing else</li><li id="src-i6"><span class="src-num">6</span> No training required, no custom reports to configure</li><li id="src-i7"><span class="src-num">7</span> Install: paste a single script tag into your HTML. No configuration required</li><li id="src-i8"><span class="src-num">8</span> Google Analytics has 125+ navigation items across 40+ subsections tracking 290+ metrics</li></ul></div><div class="src-block"><p class="src-heading">Reality sources</p><ul class="src-list"><li id="src-m1"><span class="cite src-cite"><a href="https://plausible.io/plausible.io" target="_blank" rel="noopener" data-thumb='screenshots/001_Plausible_Analytics__Live_Demo.png'>▣ 1</a></span> Dashboard shows key metrics: 277k unique visitors, 469k total visits, 1.8M pageviews, bounce rate, visit duration</li><li id="src-m2"><span class="cite src-cite"><a href="https://plausible.io/" target="_blank" rel="noopener" data-thumb='screenshots/003_Plausible_Analytics___Simple__privacy-fr.png'>▣ 2</a></span> Homepage states 'No cookies, just insights. Made and hosted in EU'</li><li id="src-m3"><span class="cite src-cite"><a href="https://plausible.io/plausible.io" target="_blank" rel="noopener" data-thumb='screenshots/004_Plausible_Analytics__Live_Demo.png'>▣ 3</a></span> Live demo dashboard displays all essential metrics on single page view</li><li id="src-m4"><span class="cite src-cite"><a href="https://plausible.io/plausible.io" target="_blank" rel="noopener" data-detail='https://plausible.io/plausible.io'>4</a></span> Dashboard interface shows no drill-down options, just tabbed views for Sources, Pages, Countries</li><li id="src-m5"><span class="cite src-cite"><a href="https://plausible.io/" target="_blank" rel="noopener" data-detail='https://plausible.io/'>5</a></span> Homepage tagline emphasizes 'No cookies, just insights'</li><li id="src-m6"><span class="cite src-cite"><a href="https://plausible.io/" target="_blank" rel="noopener" data-detail='https://plausible.io/'>6</a></span> Homepage describes as 'lightweight analytics' not comprehensive analytics</li><li id="src-m7"><span class="cite src-cite"><a href="https://plausible.io/plausible.io" target="_blank" rel="noopener" data-detail='https://plausible.io/plausible.io'>7</a></span> All key metrics visible on single dashboard page without navigation</li><li id="src-m8"><span class="cite src-cite"><a href="https://plausible.io/" target="_blank" rel="noopener" data-detail='https://plausible.io/'>8</a></span> Main value proposition: 'Easy to use and privacy-friendly Google Analytics alternative'</li><li id="src-m9"><span class="cite src-cite"><a href="https://plausible.io/" target="_blank" rel="noopener" data-detail='https://plausible.io/'>9</a></span> Purple brand color used for Plausible logo and primary action buttons</li><li id="src-m10"><span class="cite src-cite"><a href="https://plausible.io/plausible.io" target="_blank" rel="noopener" data-detail='https://plausible.io/plausible.io'>10</a></span> Blue/purple gradient used in analytics chart visualization</li><li id="src-m11"><span class="cite src-cite"><a href="https://plausible.io/plausible.io" target="_blank" rel="noopener" data-detail='https://plausible.io/plausible.io'>11</a></span> Gray text used for secondary metrics like percentages and labels</li><li id="src-m12"><span class="cite src-cite"><a href="https://plausible.io/plausible.io" target="_blank" rel="noopener" data-detail='https://plausible.io/plausible.io'>12</a></span> Green arrows and positive indicators for metric changes</li><li id="src-m13"><span class="cite src-cite"><a href="https://plausible.io/plausible.io" target="_blank" rel="noopener" data-detail='https://plausible.io/plausible.io'>13</a></span> Live demo immediately shows working analytics dashboard</li><li id="src-m14"><span class="cite src-cite"><a href="https://plausible.io/plausible.io" target="_blank" rel="noopener" data-detail='https://plausible.io/plausible.io'>14</a></span> Clean single-page dashboard layout with essential metrics prominently displayed</li><li id="src-m15"><span class="cite src-cite"><a href="https://plausible.io/plausible.io" target="_blank" rel="noopener" data-detail='https://plausible.io/plausible.io'>15</a></span> Simple tabbed interface contrasts with Google Analytics multi-level navigation</li></ul></div>
+</div>
+
+<p class="ftr">Akashic v0 &mdash; spec alignment from blind navigation</p>
+
+<script>
+(function() {
+  // Section toggle
+  document.querySelectorAll('.sec-head').forEach(function(h) {
+    h.addEventListener('click', function() {
+      var sec = h.closest('.sec');
+      sec.classList.toggle('open');
+      var icon = h.querySelector('.toggle-icon');
+      if (icon) icon.textContent = sec.classList.contains('open') ? '−' : '+';
+    });
+  });
+  // Field toggle
+  document.querySelectorAll('.fd-head').forEach(function(h) {
+    h.addEventListener('click', function() {
+      var fd = h.closest('.fd');
+      fd.classList.toggle('open');
+      var icon = h.querySelector('.toggle-icon');
+      if (icon) icon.textContent = fd.classList.contains('open') ? '−' : '+';
+    });
+  });
+  // Citation popovers
+  var popup = null, overlay = null;
+  var isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  function clamp(a) {
+    if (!popup) return;
+    popup.classList.remove('below');
+    popup.style.left = '';
+    popup.style.transform = '';
+    var r = popup.getBoundingClientRect();
+    if (r.top < 0) popup.classList.add('below');
+    var r2 = popup.getBoundingClientRect();
+    if (r2.left < 8) {
+      popup.style.left = '0';
+      popup.style.transform = 'translateX(' + (8 - r2.left) + 'px)';
+      popup.style.setProperty('--arrow-left', (a.getBoundingClientRect().left - popup.getBoundingClientRect().left + a.offsetWidth/2) + 'px');
+    } else if (r2.right > window.innerWidth - 8) {
+      var sh = r2.right - window.innerWidth + 8;
+      popup.style.left = '0';
+      popup.style.transform = 'translateX(-' + (r2.width/2 + sh) + 'px)';
+      popup.style.setProperty('--arrow-left', (a.getBoundingClientRect().left - popup.getBoundingClientRect().left + a.offsetWidth/2) + 'px');
+    }
+    popup.style.opacity = '1';
+  }
+  function show(a) {
+    hide();
+    var detail = a.getAttribute('data-detail');
+    var thumb = a.getAttribute('data-thumb');
+    if (!detail && !thumb) return;
+    popup = document.createElement('span');
+    popup.className = 'cite-popup';
+    popup.style.opacity = '0';
+    if (detail) popup.textContent = detail;
+    if (thumb) {
+      var img = document.createElement('img');
+      img.src = thumb;
+      img.alt = 'Screenshot';
+      if (!isTouch) img.onload = function() { clamp(a); };
+      popup.appendChild(img);
+    }
+    a.closest('.cite').appendChild(popup);
+    if (isTouch) {
+      overlay = document.createElement('div');
+      overlay.className = 'cite-overlay';
+      overlay.addEventListener('click', hide);
+      document.body.appendChild(overlay);
+      popup.style.opacity = '1';
+    } else { clamp(a); }
+  }
+  function hide() {
+    if (overlay) { overlay.remove(); overlay = null; }
+    if (popup) { popup.remove(); popup = null; }
+  }
+  document.addEventListener('pointerenter', function(e) {
+    if (isTouch) return;
+    var a = e.target.closest('.cite a');
+    if (a) show(a);
+  }, true);
+  document.addEventListener('pointerleave', function(e) {
+    if (isTouch) return;
+    if (e.target.closest('.cite a')) hide();
+  }, true);
+  document.addEventListener('click', function(e) {
+    if (!isTouch) return;
+    var a = e.target.closest('.cite a');
+    if (a) {
+      e.preventDefault();
+      var c = a.closest('.cite');
+      if (popup && popup.parentElement === c) { hide(); } else { show(a); }
+    }
+  }, true);
+})();
+</script>
+</body>
+</html>

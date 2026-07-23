@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Spectral Distort</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0a0a0f;
+    color: #e0e0ee;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  #canvas-wrap {
+    position: relative;
+    flex: 1 1 0;
+    width: 100%;
+    min-height: 0;
+    background: #000;
+    overflow: hidden;
+  }
+
+  #display {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    image-rendering: pixelated;
+    display: block;
+    transform: scaleX(-1);
+  }
+
+  #overlay-msg {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    background: #0009;
+    font-size: 1rem;
+    color: #aaa;
+  }
+  #overlay-msg.hidden { display: none; }
+
+  #start-btn {
+    padding: 0.6rem 1.4rem;
+    background: #4444aa;
+    border: none;
+    border-radius: 6px;
+    color: #eef;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  #start-btn:hover { background: #5555cc; }
+  #start-btn.hidden { display: none; }
+
+  #controls {
+    flex-shrink: 0;
+    background: #0e0e1a;
+    border-top: 1px solid #1e1e33;
+    display: flex;
+    flex-direction: column;
+    padding: 0.4rem 0.5rem;
+    gap: 0.35rem;
+  }
+
+  #spectrum {
+    width: 100%;
+    cursor: pointer;
+    border-radius: 4px;
+    touch-action: none;
+  }
+
+  #bottom-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.3rem 0.7rem;
+  }
+
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  .slider-row label {
+    font-size: 0.72rem;
+    color: #6666aa;
+    font-family: monospace;
+    flex-shrink: 0;
+  }
+  .slider-row input[type=range] {
+    width: 70px;
+    accent-color: #6666cc;
+    cursor: pointer;
+  }
+  .slider-row .val {
+    font-size: 0.72rem;
+    font-family: monospace;
+    color: #9090cc;
+    width: 2.4rem;
+    text-align: right;
+  }
+
+  .icon-btn {
+    padding: 0.35rem 0.6rem;
+    background: #1c1c2e;
+    border: 1px solid #333355;
+    border-radius: 5px;
+    color: #8888bb;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: background 0.12s;
+    white-space: nowrap;
+    user-select: none;
+  }
+  .icon-btn:hover { background: #2a2a44; color: #ccccee; }
+  .icon-btn.active { background: #2a2a55; border-color: #6666cc; color: #aaaaff; }
+
+  .hint {
+    font-size: 0.6rem;
+    color: #444466;
+    font-family: monospace;
+    margin-left: auto;
+  }
+  .hint-mobile { display: none; }
+  .hint-desktop { display: inline; }
+
+  @media (max-width: 600px) {
+    #controls { padding: 0.3rem; gap: 0.25rem; }
+    #bottom-row { gap: 0.25rem 0.5rem; }
+    .slider-row input[type=range] { width: 55px; }
+    .slider-row label, .slider-row .val { font-size: 0.65rem; }
+    .icon-btn { padding: 0.4rem 0.55rem; font-size: 0.7rem; }
+    .hint-mobile { display: inline; }
+    .hint-desktop { display: none; }
+  }
+
+  @media (pointer: coarse) {
+    .icon-btn {
+      padding: 0.5rem 0.7rem;
+      font-size: 0.8rem;
+      min-height: 2.2rem;
+    }
+    .slider-row input[type=range] {
+      height: 1.6rem;
+    }
+  }
+  body.fullscreen #controls { display: none; }
+  body.fullscreen #canvas-wrap { flex: 1; }
+</style>
+</head>
+<body>
+
+<div id="canvas-wrap">
+  <canvas id="display"></canvas>
+  <div id="overlay-msg">
+    <span id="status-msg">Loading...</span>
+    <button id="start-btn" class="hidden">Enable Camera &amp; Mic</button>
+    <span id="err-msg" style="color:#cc5555;font-size:0.8rem;"></span>
+  </div>
+</div>
+
+<div id="controls">
+  <canvas id="spectrum"></canvas>
+  <div id="bottom-row">
+    <div class="slider-row">
+      <label>gain</label>
+      <input type="range" id="sl-gain" min="0" max="100" value="50" step="1"/>
+      <span class="val" id="val-gain">5.0x</span>
+      <button class="icon-btn" id="auto-btn">Auto</button>
+    </div>
+    <div class="slider-row">
+      <label>n</label>
+      <input type="range" id="sl-n" min="3" max="20" value="5" step="1"/>
+      <span class="val" id="val-n">5</span>
+    </div>
+    <div class="slider-row">
+      <label>sc</label>
+      <input type="range" id="sl-sc" min="5" max="100" value="20" step="1"/>
+      <span class="val" id="val-sc">20%</span>
+    </div>
+    <button class="icon-btn" id="capture-btn">Save</button>
+    <button class="icon-btn" id="random-btn">Random</button>
+    <button class="icon-btn" id="reset-btn">Reset</button>
+    <button class="icon-btn" id="fullscreen-btn">Full</button>
+    <span class="hint"><span class="hint-desktop">drag &#x2194;: freq &middot; drag &#x2195;: width &middot; click: filter &middot; shift-click: toggle</span><span class="hint-mobile">drag &#x2194;: freq &middot; drag &#x2195;: width &middot; tap: filter &middot; hold: toggle</span></span>
+  </div>
+</div>
+
+<video id="video" autoplay playsinline muted style="display:none;"></video>
+<canvas id="offscreen" style="display:none;"></canvas>
+
+<script src="distort.js"></script>
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// Filters
+// ─────────────────────────────────────────────────────────────────────────────
+const FILTERS = [
+  { name: 'jaw',   idx: 0, h_range: [1.0,   5   ], n_reps: 3  },
+  { name: 'livch', idx: 1, h_range: [0.2,   5   ], n_reps: 1  },
+  { name: 'power', idx: 2, h_range: [0.01,  .5  ], n_reps: 1  },
+  { name: 'z',     idx: 3, h_range: [0.5,   8   ], n_reps: 15 },
+  { name: 'diff1', idx: 4, h_range: [0.04,  0.4 ], n_reps: 1  },
+  { name: 'diff2', idx: 5, h_range: [0.004, 0.04], n_reps: 1  },
+  { name: 'div1',  idx: 6, h_range: [0.00004,0.0004], n_reps: 1 },
+  { name: 'div2',  idx: 7, h_range: [0.00004,0.0004], n_reps: 1 },
+  { name: 'mul',   idx: 8, h_range: [0.02,  0.20], n_reps: 4  },
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Frequency helpers
+// ─────────────────────────────────────────────────────────────────────────────
+const MIN_FREQ = 20, MAX_FREQ = 20000;
+const LOG_MIN = Math.log(MIN_FREQ), LOG_MAX = Math.log(MAX_FREQ);
+const isTouchDevice = matchMedia('(pointer: coarse)').matches;
+const SH = isTouchDevice ? 90 : 120;
+let SW = 600;
+
+function freqToX(f) {
+  return (Math.log(Math.max(MIN_FREQ, Math.min(MAX_FREQ, f))) - LOG_MIN) / (LOG_MAX - LOG_MIN) * SW;
+}
+function xToFreq(x) {
+  return Math.exp(LOG_MIN + (x / SW) * (LOG_MAX - LOG_MIN));
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Combs — overlapping filter "tents" that slide along the spectrum
+// ─────────────────────────────────────────────────────────────────────────────
+const combs = [
+  { freq: 80,    width: 2.5, filterIdx: 4, active: true },  // diff1 on sub-bass
+  { freq: 350,   width: 2.0, filterIdx: 5, active: true },  // diff2 on bass
+  { freq: 1400,  width: 2.0, filterIdx: 3, active: true },  // z on mids
+  { freq: 5000,  width: 2.0, filterIdx: 8, active: true },  // mul on high-mid
+  { freq: 13000, width: 2.5, filterIdx: 0, active: true },  // jaw on treble
+];
+
+const COMB_COLORS = ['#ff4466', '#44ff88', '#4488ff', '#ffaa44', '#cc44ff'];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// State
+// ─────────────────────────────────────────────────────────────────────────────
+const modules = new Array(combs.length).fill(null);
+let modulesReady = false;
+let cameraRunning = false;
+let audioReady = false;
+let procW = 0, procH = 0;
+let needReinit = true;
+
+let audioCtx, analyser, freqData, binWidth;
+const smoothPower = new Float32Array(combs.length);
+let floatBuf = null; // Float32Array for additive blending
+let prevBuf = null;  // previous frame output for temporal-change detection
+let autoGainOn = false;
+let autoGainVal = 5.0;
+let showHints = true;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DOM
+// ─────────────────────────────────────────────────────────────────────────────
+const video     = document.getElementById('video');
+const offscreen = document.getElementById('offscreen');
+const display   = document.getElementById('display');
+const octx      = offscreen.getContext('2d', { willReadFrequently: true });
+const dctx      = display.getContext('2d');
+const overlay   = document.getElementById('overlay-msg');
+const statusMsg = document.getElementById('status-msg');
+const errMsg    = document.getElementById('err-msg');
+const startBtn  = document.getElementById('start-btn');
+const specCanvas= document.getElementById('spectrum');
+const sctx      = specCanvas.getContext('2d');
+const slN       = document.getElementById('sl-n');
+const slSc      = document.getElementById('sl-sc');
+const valN      = document.getElementById('val-n');
+const valSc     = document.getElementById('val-sc');
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Spectrum canvas sizing
+// ─────────────────────────────────────────────────────────────────────────────
+const dpr = window.devicePixelRatio || 1;
+
+function resizeSpectrum() {
+  SW = Math.max(200, specCanvas.parentElement.clientWidth - 16);
+  specCanvas.width = SW * dpr;
+  specCanvas.height = SH * dpr;
+  specCanvas.style.width = SW + 'px';
+  specCanvas.style.height = SH + 'px';
+  sctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+resizeSpectrum();
+window.addEventListener('resize', resizeSpectrum);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Audio — triangular window power per comb
+// ─────────────────────────────────────────────────────────────────────────────
+function updatePowers() {
+  if (!audioReady) return;
+  analyser.getByteFrequencyData(freqData);
+
+  for (let c = 0; c < combs.length; c++) {
+    const comb = combs[c];
+    const centerLog = Math.log2(comb.freq);
+    const halfW = comb.width / 2;
+    let sum = 0, wSum = 0;
+
+    for (let i = 1; i < freqData.length; i++) {
+      const f = i * binWidth;
+      if (f < MIN_FREQ || f > MAX_FREQ) continue;
+      const dist = Math.abs(Math.log2(f) - centerLog) / halfW;
+      if (dist > 1) continue;
+      const w = 1 - dist; // triangular window
+      sum += freqData[i] * w;
+      wSum += w;
+    }
+    const instant = wSum > 0 ? sum / (wSum * 255) : 0;
+    // Fast attack, moderate decay
+    const prev = smoothPower[c];
+    if (instant >= prev) {
+      smoothPower[c] = instant; // instant attack
+    } else {
+      smoothPower[c] = prev * 0.82 + instant * 0.18; // faster decay
+    }
+    // Beat onset punch: if instant jumps well above baseline, boost
+    if (instant > prev * 1.8 + 0.05) {
+      smoothPower[c] = Math.min(1, instant * 1.5);
+    }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Comb geometry helpers
+// ─────────────────────────────────────────────────────────────────────────────
+const PEAK_Y = 22, BASE_Y_OFFSET = 14;
+
+function combTriangle(comb) {
+  const cx = freqToX(comb.freq);
+  const lx = freqToX(comb.freq / Math.pow(2, comb.width / 2));
+  const rx = freqToX(comb.freq * Math.pow(2, comb.width / 2));
+  return { cx, lx, rx, py: PEAK_Y, by: SH - BASE_Y_OFFSET };
+}
+
+function ptInCombTri(px, py, tri) {
+  // Point-in-triangle test for the tent shape
+  const { lx, rx, cx, py: ty, by } = tri;
+  if (py < ty || py > by || px < lx || px > rx) return false;
+  // Left edge: from (lx, by) to (cx, ty)
+  // Right edge: from (cx, ty) to (rx, by)
+  const t = (py - ty) / (by - ty); // 0 at peak, 1 at base
+  const xLeft = cx + (lx - cx) * t;
+  const xRight = cx + (rx - cx) * t;
+  return px >= xLeft && px <= xRight;
+}
+
+function hitComb(x, y) {
+  // Return topmost (last drawn) comb that contains the point
+  for (let i = combs.length - 1; i >= 0; i--) {
+    if (ptInCombTri(x, y, combTriangle(combs[i]))) return i;
+  }
+  return -1;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Spectrum rendering
+// ─────────────────────────────────────────────────────────────────────────────
+function drawSpectrum() {
+  sctx.clearRect(0, 0, SW, SH);
+  sctx.fillStyle = '#06060c';
+  sctx.fillRect(0, 0, SW, SH);
+
+  // FFT bars
+  if (audioReady) {
+    for (let i = 1; i < freqData.length; i++) {
+      const f = i * binWidth;
+      if (f < MIN_FREQ || f > MAX_FREQ) continue;
+      const x = freqToX(f);
+      const nx = freqToX(f + binWidth);
+      const bw = Math.max(1, (nx - x) * 0.85);
+      const h = (freqData[i] / 255) * (SH - 26);
+
+      const t = (Math.log(f) - LOG_MIN) / (LOG_MAX - LOG_MIN);
+      const r = Math.round(50 + t * 160);
+      const g = Math.round(50 + (1 - Math.abs(t - 0.5) * 2) * 100);
+      const bl = Math.round(150 - t * 120);
+      sctx.fillStyle = `rgba(${r},${g},${bl},0.45)`;
+      sctx.fillRect(x, SH - BASE_Y_OFFSET - h, bw, h);
+    }
+  }
+
+  // Comb tents
+  for (let i = 0; i < combs.length; i++) {
+    const comb = combs[i];
+    const tri = combTriangle(comb);
+    const color = COMB_COLORS[i % COMB_COLORS.length];
+    const power = smoothPower[i];
+
+    // Fill tent
+    sctx.beginPath();
+    sctx.moveTo(tri.lx, tri.by);
+    sctx.lineTo(tri.cx, tri.py);
+    sctx.lineTo(tri.rx, tri.by);
+    sctx.closePath();
+
+    // Power glow + base fill
+    const baseAlpha = comb.active ? 0.15 : 0.05;
+    const glowAlpha = comb.active ? power * 0.35 : 0;
+    sctx.fillStyle = color;
+    sctx.globalAlpha = baseAlpha + glowAlpha;
+    sctx.fill();
+
+    // Outline
+    sctx.globalAlpha = comb.active ? 0.6 : 0.15;
+    sctx.strokeStyle = color;
+    sctx.lineWidth = dragComb === i ? 2.5 : 1.5;
+    sctx.stroke();
+    sctx.globalAlpha = 1;
+
+    // Filter name at peak
+    sctx.fillStyle = comb.active ? color : '#555';
+    sctx.font = 'bold 10px monospace';
+    sctx.textAlign = 'center';
+    sctx.textBaseline = 'bottom';
+    sctx.fillText(FILTERS[comb.filterIdx].name, tri.cx, tri.py - 2);
+
+    // Power readout
+    if (comb.active && audioReady) {
+      sctx.font = '8px monospace';
+      sctx.fillStyle = `rgba(255,255,255,${0.3 + power * 0.5})`;
+      sctx.textBaseline = 'top';
+      sctx.fillText(power.toFixed(2), tri.cx, tri.py + 2);
+    }
+
+    // Inactive X
+    if (!comb.active) {
+      sctx.font = 'bold 9px monospace';
+      sctx.fillStyle = '#ff444466';
+      sctx.textBaseline = 'top';
+      sctx.fillText('OFF', tri.cx, tri.py + 2);
+    }
+  }
+
+  // Frequency axis
+  sctx.fillStyle = '#333';
+  sctx.font = '8px monospace';
+  sctx.textBaseline = 'bottom';
+  sctx.textAlign = 'center';
+  for (const [freq, label] of [[50,'50'],[100,'100'],[200,'200'],[500,'500'],[1000,'1k'],[2000,'2k'],[5000,'5k'],[10000,'10k']]) {
+    sctx.fillText(label, freqToX(freq), SH - 1);
+  }
+
+  // Tutorial hints (disappear after first interaction)
+  if (showHints && combs.length > 0) {
+    const tri = combTriangle(combs[0]);
+    const hx = tri.lx - 6;
+    sctx.textAlign = 'right';
+    sctx.textBaseline = 'middle';
+    sctx.font = '9px system-ui, sans-serif';
+    sctx.fillStyle = '#8888bbcc';
+    if (isTouchDevice) {
+      sctx.fillText('tap me \u2192', hx, tri.py + 8);
+      sctx.fillText('drag me \u2192', hx, tri.py + 20);
+      sctx.fillText('hold me \u2192', hx, tri.py + 32);
+    } else {
+      sctx.fillText('click me \u2192', hx, tri.py + 4);
+      sctx.fillText('drag me \u2192', hx, tri.py + 16);
+      sctx.fillText('scroll me \u2192', hx, tri.py + 28);
+    }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Interaction — drag to slide, click to cycle filter, shift-click to toggle
+// ─────────────────────────────────────────────────────────────────────────────
+let dragComb = -1;
+let dragMoved = false;
+let dragStartX = 0, dragStartY = 0, dragStartWidth = 0;
+
+function specXY(e) {
+  const r = specCanvas.getBoundingClientRect();
+  const cx = e.touches ? e.touches[0].clientX : e.clientX;
+  const cy = e.touches ? e.touches[0].clientY : e.clientY;
+  return [(cx - r.left) * SW / r.width, (cy - r.top) * SH / r.height];
+}
+
+specCanvas.addEventListener('mousedown', e => {
+  const [x, y] = specXY(e);
+  dragComb = hitComb(x, y);
+  dragMoved = false;
+  dragStartX = x; dragStartY = y;
+  if (dragComb >= 0) { dragStartWidth = combs[dragComb].width; showHints = false; e.preventDefault(); }
+});
+
+window.addEventListener('mousemove', e => {
+  if (dragComb < 0) return;
+  const [x, y] = specXY(e);
+  if (Math.abs(x - dragStartX) > 4 || Math.abs(y - dragStartY) > 4) dragMoved = true;
+  if (!dragMoved) return;
+  combs[dragComb].freq = Math.max(MIN_FREQ, Math.min(MAX_FREQ, xToFreq(x)));
+  combs[dragComb].width = Math.max(0.5, Math.min(6, dragStartWidth + (dragStartY - y) * 0.04));
+});
+
+window.addEventListener('mouseup', e => {
+  if (dragComb >= 0 && !dragMoved) {
+    // Click — cycle filter or toggle
+    if (e.shiftKey) {
+      combs[dragComb].active = !combs[dragComb].active;
+    } else {
+      combs[dragComb].filterIdx = (combs[dragComb].filterIdx + 1) % FILTERS.length;
+    }
+  }
+  dragComb = -1;
+});
+
+specCanvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  const [x, y] = specXY(e);
+  const c = hitComb(x, y);
+  if (c < 0) return;
+  const delta = e.deltaY > 0 ? 0.2 : -0.2;
+  combs[c].width = Math.max(0.5, Math.min(6, combs[c].width + delta));
+}, { passive: false });
+
+// Cursor hint
+specCanvas.addEventListener('mousemove', e => {
+  if (dragComb >= 0) return;
+  const [x, y] = specXY(e);
+  specCanvas.style.cursor = hitComb(x, y) >= 0 ? 'grab' : 'default';
+});
+
+// Touch support — tap: cycle filter, long-press: toggle, drag: slide
+let longPressTimer = null;
+let longPressFired = false;
+
+specCanvas.addEventListener('touchstart', e => {
+  const [x, y] = specXY(e);
+  dragComb = hitComb(x, y);
+  dragMoved = false;
+  longPressFired = false;
+  dragStartX = x; dragStartY = y;
+  if (dragComb >= 0) {
+    dragStartWidth = combs[dragComb].width;
+    showHints = false;
+    e.preventDefault();
+    longPressTimer = setTimeout(() => {
+      longPressFired = true;
+      combs[dragComb].active = !combs[dragComb].active;
+      // Visual feedback — brief vibration if available
+      if (navigator.vibrate) navigator.vibrate(30);
+    }, 400);
+  }
+}, { passive: false });
+
+window.addEventListener('touchmove', e => {
+  if (dragComb < 0) return;
+  if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+  const rect = specCanvas.getBoundingClientRect();
+  const x = (e.touches[0].clientX - rect.left) * SW / rect.width;
+  const y = (e.touches[0].clientY - rect.top) * SH / rect.height;
+  if (Math.abs(x - dragStartX) > 6 || Math.abs(y - dragStartY) > 6) dragMoved = true;
+  if (dragMoved) {
+    combs[dragComb].freq = Math.max(MIN_FREQ, Math.min(MAX_FREQ, xToFreq(x)));
+    combs[dragComb].width = Math.max(0.5, Math.min(6, dragStartWidth + (dragStartY - y) * 0.04));
+  }
+}, { passive: false });
+
+window.addEventListener('touchend', e => {
+  if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+  if (dragComb >= 0 && !dragMoved && !longPressFired) {
+    combs[dragComb].filterIdx = (combs[dragComb].filterIdx + 1) % FILTERS.length;
+  }
+  dragComb = -1;
+});
+
+// Context menu for toggle (right-click)
+specCanvas.addEventListener('contextmenu', e => {
+  e.preventDefault();
+  const [x, y] = specXY(e);
+  const c = hitComb(x, y);
+  if (c >= 0) combs[c].active = !combs[c].active;
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// WASM init / reinit
+// ─────────────────────────────────────────────────────────────────────────────
+function reinitAll() {
+  const sc = parseInt(slSc.value) / 100;
+  procW = Math.max(1, Math.round((video.videoWidth || 640) * sc));
+  procH = Math.max(1, Math.round((video.videoHeight || 480) * sc));
+  offscreen.width = procW;
+  offscreen.height = procH;
+  display.width = procW;
+  display.height = procH;
+
+  const n = parseInt(slN.value);
+  for (const mod of modules) { if (mod) mod._init(n, procW, procH); }
+
+  floatBuf = new Float32Array(procW * procH * 3);
+  prevBuf  = new Float32Array(procW * procH * 3);
+  needReinit = false;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Sliders
+// ─────────────────────────────────────────────────────────────────────────────
+const slGain = document.getElementById('sl-gain');
+const valGain = document.getElementById('val-gain');
+const autoBtn = document.getElementById('auto-btn');
+function sliderGain() { const t = parseInt(slGain.value) / 100; return t * t * 20; } // quadratic: 0–20x
+function getGain() { return autoGainOn ? autoGainVal : sliderGain(); }
+function updateGainDisplay() {
+  valGain.textContent = (autoGainOn ? autoGainVal : sliderGain()).toFixed(1) + 'x';
+}
+slGain.addEventListener('input', updateGainDisplay);
+autoBtn.addEventListener('click', () => {
+  autoGainOn = !autoGainOn;
+  if (autoGainOn) autoGainVal = sliderGain(); // seed from current slider
+  autoBtn.classList.toggle('active', autoGainOn);
+  updateGainDisplay();
+});
+
+slN.addEventListener('input', () => { valN.textContent = slN.value; needReinit = true; });
+slSc.addEventListener('input', () => { valSc.textContent = slSc.value + '%'; needReinit = true; });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Capture / Reset
+// ─────────────────────────────────────────────────────────────────────────────
+document.getElementById('capture-btn').addEventListener('click', () => {
+  if (procW === 0) return;
+  const a = document.createElement('a');
+  a.href = display.toDataURL('image/png');
+  a.download = `spectral-${Date.now()}.png`;
+  a.click();
+});
+
+document.getElementById('random-btn').addEventListener('click', () => {
+  for (const comb of combs) {
+    comb.freq = MIN_FREQ * Math.pow(MAX_FREQ / MIN_FREQ, Math.random());
+    comb.width = 0.8 + Math.random() * 4;
+    comb.filterIdx = Math.floor(Math.random() * FILTERS.length);
+    comb.active = true;
+  }
+});
+
+document.getElementById('reset-btn').addEventListener('click', () => {
+  for (const mod of modules) { if (mod) mod._reset(); }
+  smoothPower.fill(0);
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Adaptive gain — nudges autoGainVal each frame toward a target distortion level
+// ─────────────────────────────────────────────────────────────────────────────
+function updateAutoGain(raw, pixels) {
+  if (!autoGainOn) return;
+
+  // Only adapt when there's actual audio driving the effect
+  let totalPower = 0;
+  for (let c = 0; c < combs.length; c++) totalPower += smoothPower[c];
+  if (totalPower < 0.02) return;
+
+  // Sample every 8th pixel for speed
+  let diffSum = 0, changeSum = 0, n = 0;
+  for (let i = 0; i < pixels; i += 8) {
+    const b = i * 3, j = i * 4;
+    diffSum   += (Math.abs(floatBuf[b]   - raw[j])
+               +  Math.abs(floatBuf[b+1] - raw[j+1])
+               +  Math.abs(floatBuf[b+2] - raw[j+2])) / 3;
+    changeSum += (Math.abs(floatBuf[b]   - prevBuf[b])
+               +  Math.abs(floatBuf[b+1] - prevBuf[b+1])
+               +  Math.abs(floatBuf[b+2] - prevBuf[b+2])) / 3;
+    n++;
+  }
+  const diff   = diffSum   / (n * 255); // 0–1, how far output is from raw
+  const change = changeSum / (n * 255); // 0–1, how much changed since last frame
+
+  const TARGET_LO = 0.12, TARGET_HI = 0.40;
+  const maxGain = sliderGain() * 3; // allow auto to push well past slider
+
+  if (change < 0.001) {
+    // Frozen / runaway — decay
+    autoGainVal *= 0.90;
+  } else if (diff < TARGET_LO) {
+    // Too subtle — ramp up aggressively
+    autoGainVal = Math.min(maxGain, autoGainVal * 1.08);
+  } else if (diff > TARGET_HI) {
+    // Too wild — pull back gently (let it stay wild longer)
+    autoGainVal = Math.max(0.05, autoGainVal * 0.95);
+  }
+
+  updateGainDisplay();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Frame loop
+//   output = raw + sum( power_i * (filtered_i - raw) )
+//   silence => raw camera, sound adds filter deltas on top
+// ─────────────────────────────────────────────────────────────────────────────
+function frame() {
+  requestAnimationFrame(frame);
+
+  updatePowers();
+  drawSpectrum();
+
+  if (!cameraRunning || !modulesReady) return;
+  if (needReinit || procW === 0) {
+    reinitAll();
+    if (procW === 0) return;
+  }
+
+  // Grab camera frame (unflipped — WASM flips internally, we un-flip when reading output)
+  octx.drawImage(video, 0, 0, procW, procH);
+  const imgData = octx.getImageData(0, 0, procW, procH);
+  const raw = imgData.data;
+  const pixels = procW * procH;
+
+  // Start with raw in float buffer
+  for (let i = 0, j = 0; i < pixels; i++, j += 4) {
+    floatBuf[i * 3]     = raw[j];
+    floatBuf[i * 3 + 1] = raw[j + 1];
+    floatBuf[i * 3 + 2] = raw[j + 2];
+  }
+
+  // Add each active comb's delta: gain * power * (filtered - raw)
+  const gain = getGain();
+  for (let c = 0; c < combs.length; c++) {
+    if (!combs[c].active) continue;
+    const power = smoothPower[c] * gain;
+    if (power < 0.005) continue;
+
+    const mod = modules[c];
+    const filter = FILTERS[combs[c].filterIdx];
+
+    // Feed raw camera to this module
+    const inPtr = mod._get_input_ptr();
+    mod.HEAPU8.set(raw, inPtr);
+
+    // Process with h scaled by power
+    const h = power * filter.h_range[1];
+    mod._process(filter.idx, h, filter.n_reps);
+
+    // Accumulate delta (un-flip WASM output by reading with mirrored x)
+    const outPtr = mod._get_output_ptr();
+    const heap = mod.HEAPU8;
+    for (let y = 0; y < procH; y++) {
+      for (let x = 0; x < procW; x++) {
+        const i = y * procW + x;
+        const fi = y * procW + (procW - 1 - x); // WASM output is H-flipped
+        const j = i * 4;
+        const fj = fi * 4;
+        const base = i * 3;
+        floatBuf[base]     += power * (heap[outPtr + fj]     - raw[j]);
+        floatBuf[base + 1] += power * (heap[outPtr + fj + 1] - raw[j + 1]);
+        floatBuf[base + 2] += power * (heap[outPtr + fj + 2] - raw[j + 2]);
+      }
+    }
+  }
+
+  updateAutoGain(raw, pixels);
+  prevBuf.set(floatBuf);
+
+  // Write to display — Uint8ClampedArray handles 0-255 clamping
+  const outImg = dctx.createImageData(procW, procH);
+  const dd = outImg.data;
+  for (let i = 0, j = 0; i < pixels; i++, j += 4) {
+    const base = i * 3;
+    dd[j]     = floatBuf[base];
+    dd[j + 1] = floatBuf[base + 1];
+    dd[j + 2] = floatBuf[base + 2];
+    dd[j + 3] = 255;
+  }
+  dctx.putImageData(outImg, 0, 0);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Fullscreen
+// ─────────────────────────────────────────────────────────────────────────────
+function toggleFullscreen() {
+  const entering = !document.body.classList.contains('fullscreen');
+  document.body.classList.toggle('fullscreen');
+  if (entering) {
+    const el = document.documentElement;
+    (el.requestFullscreen || el.webkitRequestFullscreen || (() => {})).call(el).catch(() => {});
+  } else {
+    const ex = document.exitFullscreen || document.webkitExitFullscreen;
+    if (ex && document.fullscreenElement) ex.call(document).catch(() => {});
+  }
+}
+document.addEventListener('fullscreenchange', () => {
+  if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+    document.body.classList.remove('fullscreen');
+  }
+});
+document.getElementById('fullscreen-btn').addEventListener('click', toggleFullscreen);
+document.addEventListener('keydown', e => {
+  if (e.key === 'f' || e.key === 'F') {
+    if (e.target.tagName === 'INPUT') return;
+    toggleFullscreen();
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Camera + mic
+// ─────────────────────────────────────────────────────────────────────────────
+startBtn.addEventListener('click', async () => {
+  try {
+    audioCtx = new AudioContext();
+    // Resume immediately while still inside the user gesture — on iOS the
+    // gesture context is lost after the first await, so this must come first.
+    if (audioCtx.state === 'suspended') await audioCtx.resume();
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 2048;
+    analyser.smoothingTimeConstant = 0.15;
+    freqData = new Uint8Array(analyser.frequencyBinCount);
+    binWidth = audioCtx.sampleRate / analyser.fftSize;
+
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
+      audio: true,
+    });
+
+    video.srcObject = new MediaStream(stream.getVideoTracks());
+    await video.play();
+
+    const source = audioCtx.createMediaStreamSource(new MediaStream(stream.getAudioTracks()));
+    source.connect(analyser);
+    audioReady = true;
+
+    cameraRunning = true;
+    overlay.classList.add('hidden');
+    needReinit = true;
+  } catch (e) {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false,
+      });
+      video.srcObject = stream;
+      await video.play();
+      cameraRunning = true;
+      overlay.classList.add('hidden');
+      needReinit = true;
+      errMsg.textContent = 'No mic — camera only';
+      errMsg.style.color = '#aa8833';
+    } catch (e2) {
+      errMsg.textContent = e2.message || 'Camera access denied';
+    }
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Load WASM modules (one per comb)
+// ─────────────────────────────────────────────────────────────────────────────
+async function loadModules() {
+  statusMsg.textContent = 'Loading WASM modules...';
+  for (let i = 0; i < combs.length; i++) {
+    modules[i] = await DistortModule();
+    statusMsg.textContent = `Loading ${i + 1}/${combs.length}...`;
+  }
+  modulesReady = true;
+  statusMsg.textContent = 'Camera & microphone not started';
+  startBtn.classList.remove('hidden');
+  requestAnimationFrame(frame);
+}
+
+loadModules().catch(err => {
+  statusMsg.textContent = 'Failed to load WASM — see console';
+  console.error(err);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Akashic &mdash; basecamp.com</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+      Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.6;
+    color: #111;
+    background: #fff;
+    padding: 3rem 2rem 6rem;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+  a { color: inherit; }
+  a:hover { color: #000; }
+  ::selection { background: rgba(0,0,0,0.08); }
+
+  /* ── header ── */
+  .hdr { margin-bottom: 3rem; }
+  .hdr-brand {
+    font-size: 14px;
+    opacity: 0.35;
+    margin-bottom: 0.75rem;
+  }
+  .hdr h1 {
+    font-size: 22px;
+    font-weight: 500;
+    line-height: 1.35;
+    margin-bottom: 0.25rem;
+  }
+  .hdr p {
+    font-size: 14px;
+    opacity: 0.4;
+  }
+
+  /* ── score colors (dark-tinted, close to black) ── */
+  .clr-4 { color: #2a7a42; }
+  .clr-3 { color: #2a7a42; }
+  .clr-2 { color: #8a6d2a; }
+  .clr-1 { color: #a33; }
+  .clr-0 { color: #a33; }
+
+  /* ── score row (premise + score) ── */
+  .score-row {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 0.25rem;
+  }
+  .score-block {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── premise ── */
+  .premise {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    font-size: 14px;
+    margin-bottom: 2rem;
+  }
+  .premise-inputs {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 1.2rem;
+    padding-right: 14px;
+  }
+  .premise-inputs::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0.5em;
+    bottom: 0.5em;
+    width: 10px;
+    border: 1px solid rgba(0,0,0,0.25);
+    border-left: none;
+    border-radius: 0 4px 4px 0;
+  }
+  .premise-label {
+    color: rgba(0,0,0,0.55);
+    font-weight: 500;
+    line-height: 1;
+  }
+  .premise-bracket { display: none; }
+  .premise-arrow {
+    width: 24px;
+    height: 1px;
+    background: rgba(0,0,0,0.25);
+    flex-shrink: 0;
+  }
+
+  /* ── headline ── */
+  .headline {
+    font-size: 16px;
+    line-height: 1.55;
+    max-width: 600px;
+    margin-bottom: 0.5rem;
+    font-weight: 400;
+  }
+
+  /* ── tldr ── */
+  .tldr {
+    margin-bottom: 3rem;
+  }
+  .tldr-heading {
+    font-size: 13px;
+    font-weight: 500;
+    opacity: 0.3;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.5rem;
+  }
+  .tldr ul {
+    margin: 0;
+    padding-left: 1.2em;
+    font-size: 15px;
+    line-height: 1.65;
+    opacity: 0.55;
+    max-width: 600px;
+  }
+  .tldr ul li {
+    margin-bottom: 0.35rem;
+    list-style: disc;
+  }
+
+  /* ── overall ── */
+  .overall {
+    font-size: 64px;
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    margin-bottom: 0.25rem;
+  }
+  .overall-sub {
+    font-size: 14px;
+    opacity: 0.35;
+    margin-bottom: 0;
+  }
+
+  /* ── sections ── */
+  .sec {
+    margin-bottom: 0;
+    border-top: 1px solid rgba(0,0,0,0.08);
+  }
+  .sec-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    padding: 1.25rem 0 1rem;
+    cursor: pointer;
+    user-select: none;
+  }
+  .sec-score {
+    font-size: 20px;
+    font-weight: 500;
+    min-width: 1.5rem;
+    text-align: right;
+  }
+  .sec-score-denom {
+    font-size: 13px;
+    font-weight: 400;
+    opacity: 0.3;
+  }
+  .sec-title {
+    font-size: 16px;
+    font-weight: 500;
+  }
+  .toggle-icon {
+    font-size: 14px;
+    font-weight: 400;
+    color: rgba(0,0,0,0.3);
+    line-height: 1;
+    width: 1em;
+    text-align: center;
+    flex-shrink: 0;
+    transition: color 0.1s;
+  }
+  .sec-head .toggle-icon {
+    font-size: 16px;
+    margin-left: 0.25rem;
+  }
+  .sec-body {
+    display: none;
+    padding: 0 0 2rem 2.75rem;
+  }
+  .sec.open .sec-body {
+    display: block;
+  }
+
+  /* ── field diff ── */
+  .fd {
+    border-top: 1px solid rgba(0,0,0,0.06);
+  }
+  .fd:first-child {
+    border-top: none;
+  }
+  .fd-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    padding: 0.5rem 0;
+    cursor: pointer;
+    user-select: none;
+  }
+  .fd-head:hover {
+    opacity: 0.7;
+  }
+  .fd-body {
+    display: none;
+    padding: 0 0 1rem 0;
+  }
+  .fd.open .fd-body {
+    display: block;
+  }
+  .fd-label {
+    font-size: 14px;
+    font-weight: 400;
+    opacity: 0.45;
+    line-height: 1.4;
+  }
+  .fd-st {
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .fd-st-aligned { color: #2a7a42; }
+  .fd-st-minor-drift { color: #8a6d2a; }
+  .fd-st-major-drift { color: #a33; font-weight: 600; }
+  .fd-st-missing-intended { color: #6a4a9a; }
+  .fd-st-missing-implicit { color: #a33; font-weight: 600; }
+  .fd-st-skipped { color: #888; }
+  .fd-st-empty { color: #888; }
+
+  /* ── comparison columns ── */
+  .fd-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+  .fd-col-label {
+    font-size: 11px;
+    font-weight: 500;
+    opacity: 0.3;
+    margin-bottom: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .fd-val {
+    font-size: 15px;
+    line-height: 1.55;
+  }
+  .fd-val ul { margin: 0; padding-left: 1.2em; }
+  .fd-val ul li { margin-bottom: 4px; list-style: disc; font-size: 14px; }
+  .fd-val .kv { width: 100%; font-size: 14px; border-collapse: collapse; }
+  .fd-val .kv th { font-weight: 500; font-size: 11px; opacity: 0.4; text-transform: uppercase; letter-spacing: 0.03em; text-align: left; padding: 4px 12px 4px 0; border-bottom: 1px solid rgba(0,0,0,0.08); white-space: nowrap; }
+  .fd-val .kv td { padding: 4px 12px 4px 0; border-bottom: 1px solid rgba(0,0,0,0.04); vertical-align: top; }
+  .fd-val .kv td:first-child { white-space: nowrap; }
+  .fd-val .empty { opacity: 0.25; font-style: italic; }
+
+  /* ── cog walkthrough grid ── */
+  .cw {
+    display: grid;
+    grid-template-columns: 1.5fr repeat(4, auto);
+    gap: 0;
+    font-size: 13px;
+  }
+  .cw > div {
+    padding: 5px 10px 5px 0;
+    border-bottom: 1px solid rgba(0,0,0,0.04);
+  }
+  .cw-h {
+    font-weight: 500;
+    font-size: 11px;
+    opacity: 0.4;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+  }
+  .cw-pass { color: #16a34a; }
+  .cw-friction { color: #b45309; }
+  .cw-fail { color: #dc2626; }
+  .cw-reason {
+    grid-column: 1 / -1;
+    font-size: 12px;
+    opacity: 0.5;
+    padding: 0 0 6px 12px;
+  }
+
+  /* ── color swatch ── */
+  .swatch {
+    display: inline-block;
+    width: 12px; height: 12px;
+    border-radius: 3px;
+    vertical-align: middle;
+    border: 1px solid rgba(0,0,0,0.15);
+    margin-right: 2px;
+  }
+
+  /* ── note ── */
+  .fd-note {
+    font-size: 14px;
+    opacity: 0.4;
+    line-height: 1.55;
+    max-width: 600px;
+  }
+
+  /* ── citations ── */
+  .cite {
+    font-size: 11px;
+    line-height: 1;
+    vertical-align: super;
+    position: relative;
+  }
+  .cite a {
+    color: #4361ee;
+    text-decoration: underline;
+    text-decoration-color: rgba(67,97,238,0.35);
+    text-underline-offset: 1px;
+    cursor: pointer;
+  }
+  .cite a:hover {
+    color: #3a0ca3;
+    text-decoration-color: #3a0ca3;
+  }
+  .cite-popup {
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1a1a1a;
+    color: #e8e8e8;
+    font-size: 13px;
+    line-height: 1.45;
+    padding: 8px 12px;
+    border-radius: 4px;
+    max-width: 360px;
+    min-width: 160px;
+    width: max-content;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+    z-index: 1000;
+    pointer-events: none;
+    white-space: normal;
+    transition: opacity 0.08s ease;
+  }
+  .cite-popup img {
+    display: block;
+    max-width: 320px;
+    border-radius: 3px;
+    margin-top: 6px;
+  }
+  .cite-popup::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: var(--arrow-left, 50%);
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: #1a1a1a;
+  }
+  .cite-popup.below {
+    bottom: auto;
+    top: calc(100% + 6px);
+  }
+  .cite-popup.below::after {
+    top: auto;
+    bottom: 100%;
+    border-top-color: transparent;
+    border-bottom-color: #1a1a1a;
+  }
+  .cite-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.15);
+    z-index: 999;
+  }
+
+  /* ── sources footnotes ── */
+  .sources {
+    margin-top: 4rem;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(0,0,0,0.08);
+  }
+  .src-block { margin-bottom: 1.5rem; }
+  .src-heading {
+    font-size: 13px;
+    font-weight: 500;
+    opacity: 0.35;
+    margin-bottom: 0.25rem;
+  }
+  .src-list {
+    margin: 0;
+    padding: 0;
+    font-size: 13px;
+    line-height: 1.6;
+    list-style: none;
+  }
+  .src-list li {
+    margin-bottom: 4px;
+    color: rgba(0,0,0,0.5);
+  }
+  .src-cite {
+    font-size: 13px;
+    vertical-align: baseline;
+    line-height: 1;
+  }
+  .src-num {
+    display: inline-block;
+    min-width: 1.5em;
+    text-align: right;
+    margin-right: 0.5em;
+    font-size: 13px;
+  }
+  .src-cite a {
+    display: inline-block;
+    min-width: 1.5em;
+    text-align: right;
+    margin-right: 0.5em;
+    color: #4361ee;
+    text-decoration: underline;
+    text-decoration-color: rgba(67,97,238,0.35);
+    cursor: pointer;
+  }
+  .src-cite a:hover {
+    color: #3a0ca3;
+    text-decoration-color: #3a0ca3;
+  }
+  .src-url {
+    font-size: 12px;
+    opacity: 0.6;
+    text-decoration: underline;
+    text-decoration-color: rgba(0,0,0,0.15);
+  }
+  .sources a { text-decoration: underline; text-decoration-color: rgba(0,0,0,0.15); }
+
+  /* ── footer ── */
+  .ftr {
+    margin-top: 4rem;
+    font-size: 13px;
+    opacity: 0.2;
+  }
+
+  /* ── responsive ── */
+  @media (max-width: 600px) {
+    body { padding: 1.5rem 1rem 4rem; }
+    .fd-pair { grid-template-columns: 1fr; gap: 1rem; }
+    .cite-popup {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      top: auto;
+      transform: none;
+      max-width: 100%; width: 100%;
+      border-radius: 8px 8px 0 0;
+      max-height: 70vh;
+      overflow-y: auto;
+      pointer-events: auto;
+      padding: 16px;
+    }
+    .cite-popup::after { display: none; }
+    .cite-popup img { max-width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <p class="hdr-brand">◈ Akashic</p>
+  <h1>basecamp.com</h1>
+  <p>2026-03-16 5:45 PM</p>
+</div>
+
+<div class="score-row">
+  <div class="premise">
+    <div class="premise-inputs">
+      <span class="premise-label">Specification</span>
+      <span class="premise-label">Reality</span>
+    </div>
+    <div class="premise-bracket"></div>
+    <div class="premise-arrow"></div>
+  </div>
+  <div class="score-block">
+    <div class="overall clr-2">2.0<span style="font-size:24px;opacity:0.25"> / 4</span></div>
+    <p class="overall-sub">overall alignment</p>
+  </div>
+</div>
+<p class="headline">Product delivers project organization but omits Shape Up methodology entirely.</p>
+
+<div class="tldr"><p class="tldr-heading">Key findings</p><ul><li>Shape Up cycles missing from product</li><li>Anti-goals focus different concerns</li><li>Onboarding completely unspecified</li><li>Core organization promise delivered</li></ul></div>
+<section class="sec" id="product_identity">
+  <div class="sec-head" data-section="product_identity">
+    <span class="sec-score clr-2">2<span class="sec-score-denom">/4</span></span>
+    <span class="sec-title">Product Identity</span>
+    <span class="toggle-icon">+</span>
+  </div>
+  <div class="sec-body"><div class="fd" data-status="minor_drift"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Jtbd</span><span class="fd-st fd-st-minor-drift">minor drift</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val">Minimize the time it takes to coordinate project information across team members and stakeholders</div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val">Increase the visibility and organization of team work across projects and time <sup class="cite"><a href="https://3.basecamp.com/6176273/" target="_blank" rel="noopener" data-detail='Homepage shows &#39;Lineup&#39; navigation for project schedules and &#39;Your Schedule&#39; and &#39;Your Assignments&#39; sections' data-thumb='screenshots/001_Home.png'>[▣1]</a></sup></div></div></div><p class="fd-note">Spec says minimize time; product says increase visibility and organization.</p></div></div><div class="fd" data-status="aligned"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Description</span><span class="fd-st fd-st-aligned">aligned</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val">Project management and team communication software that centralizes work discussions, tasks, and decisions in one place per project <sup class="cite"><a href="#src-i1" data-detail='Basecamp organizes work around projects — each project has its own message board, to-do lists, file storage, schedule, and group chat (Campfire). The goal is to avoid tool sprawl: one place for everything related to a piece of work'>[1]</a></sup></div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val">Basecamp is a project organization platform that centralizes team work into structured project spaces with built-in tools</div></div></div><p class="fd-note">Same core concept: project-centered work organization with integrated tools.</p></div></div><div class="fd" data-status="major_drift"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Anti Goals</span><span class="fd-st fd-st-major-drift">major drift</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val"><ul><li>NOT a heavy Scrum or Jira process that generates overhead without progress <sup class="cite"><a href="#src-i2" data-detail='Teams are either scattered across too many tools (half in GitHub issues, half in Slack, decisions lost in email threads) or suffer from the opposite extreme: a heavy Scrum or Jira process that generates overhead without progress'>[2]</a></sup></li><li>NOT scattered across multiple tools like GitHub issues, Slack, and email threads <sup class="cite"><a href="#src-i2" data-detail='Teams are either scattered across too many tools (half in GitHub issues, half in Slack, decisions lost in email threads) or suffer from the opposite extreme: a heavy Scrum or Jira process that generates overhead without progress'>[2]</a></sup></li><li>NOT per-seat pricing or enterprise negotiation <sup class="cite"><a href="#src-i3" data-detail='Basecamp — $299/month flat, unlimited users. No per-seat pricing. This is explicitly positioned as anti-enterprise-SaaS: one price, everyone in, no negotiation'>[3]</a></sup></li></ul></div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val"><ul><li>NOT a quick task capture tool — creating tasks requires navigating to specific projects and lists, no global quick-add visible <sup class="cite"><a href="https://3.basecamp.com/6176273/buckets/46519877/todosets/9685835865" target="_blank" rel="noopener" data-detail='Task creation requires navigating to project, then To-dos, then New list with multiple form fields'>[2]</a></sup></li><li>NOT a real-time chat platform — communication happens through structured message boards and pings, not instant messaging <sup class="cite"><a href="https://3.basecamp.com/6176273/circles" target="_blank" rel="noopener" data-detail='Pings section shows &#39;You don&#39;t have any Pings yet&#39; suggesting structured rather than instant communication'>[3]</a></sup></li><li>NOT a calendar scheduling tool — the 'Lineup' shows project schedules but not personal appointments or meetings <sup class="cite"><a href="https://3.basecamp.com/6176273/lineup" target="_blank" rel="noopener" data-detail='Lineup page shows &#39;Scheduled projects&#39; focused on project timelines, not calendar appointments'>[4]</a></sup></li><li>NOT a file storage system — files are organized within project contexts, not as standalone document management <sup class="cite"><a href="https://3.basecamp.com/6176273/projects/46519877" target="_blank" rel="noopener" data-detail='Docs &amp; Files appears as tab within project context, not standalone document management'>[5]</a></sup></li></ul></div></div></div><p class="fd-note">Spec opposes tool sprawl; product opposes quick capture and chat.</p></div></div></div>
+</section>
+<section class="sec" id="target_user">
+  <div class="sec-head" data-section="target_user">
+    <span class="sec-score clr-3">3<span class="sec-score-denom">/4</span></span>
+    <span class="sec-title">Target User</span>
+    <span class="toggle-icon">+</span>
+  </div>
+  <div class="sec-body"><div class="fd" data-status="minor_drift"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Role</span><span class="fd-st fd-st-minor-drift">minor drift</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val">Software product teams at established companies <sup class="cite"><a href="#src-i4" data-detail='Software product teams at established companies — particularly those burned by Jira&#39;s complexity or the chaos of Slack + email + spreadsheet coordination'>[4]</a></sup></div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val">Team lead or project manager</div></div></div><p class="fd-note">Spec says software teams; product says team leads/managers.</p></div></div><div class="fd" data-status="minor_drift"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Work Context</span><span class="fd-st fd-st-minor-drift">minor drift</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val">Teams burned by Jira's complexity or chaos of Slack + email + spreadsheet coordination <sup class="cite"><a href="#src-i4" data-detail='Software product teams at established companies — particularly those burned by Jira&#39;s complexity or the chaos of Slack + email + spreadsheet coordination'>[4]</a></sup></div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val">Small to medium teams working on multiple concurrent projects</div></div></div><p class="fd-note">Spec targets Jira-burned teams; product targets multi-project coordinators.</p></div></div><div class="fd" data-status="minor_drift"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Tech Level</span><span class="fd-st fd-st-minor-drift">minor drift</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val">Technical</div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val">Semi-technical</div></div></div><p class="fd-note">Spec says technical; product says semi-technical.</p></div></div><div class="fd" data-status="aligned"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Domain</span><span class="fd-st fd-st-aligned">aligned</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val">Software product development and project management</div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val">Project management and team coordination</div></div></div><p class="fd-note">Both focus on project management; spec adds software development.</p></div></div><div class="fd" data-status="minor_drift"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Reading Level</span><span class="fd-st fd-st-minor-drift">minor drift</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val">College</div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val">9-12</div></div></div><p class="fd-note">Spec says college; product says 9-12.</p></div></div></div>
+</section>
+<section class="sec" id="value_hierarchy">
+  <div class="sec-head" data-section="value_hierarchy">
+    <span class="sec-score clr-2">2<span class="sec-score-denom">/4</span></span>
+    <span class="sec-title">Value Hierarchy</span>
+    <span class="toggle-icon">+</span>
+  </div>
+  <div class="sec-body"><div class="fd" data-status="aligned"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Value Prop</span><span class="fd-st fd-st-aligned">aligned</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val">One place for everything related to a piece of work, rather than decisions scattered across Slack, Notion, Jira, and email <sup class="cite"><a href="#src-i5" data-detail='one place for everything related to a piece of work, rather than decisions scattered across Slack, Notion, Jira, and email'>[5]</a></sup></div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val">Organize team work into structured project spaces with integrated communication and task management <sup class="cite"><a href="https://3.basecamp.com/6176273/" target="_blank" rel="noopener" data-detail='Homepage prominently displays project list with sample projects showing Message Board, To-dos, Docs &amp; Files structure' data-thumb='screenshots/002_Home.png'>[▣6]</a></sup></div></div></div><p class="fd-note">Same centralization goal; spec emphasizes anti-chaos, product emphasizes structure.</p></div></div><div class="fd" data-status="major_drift"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Per Page</span><span class="fd-st fd-st-major-drift">major drift</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val"><table class="kv"><tr><th>Page</th><th>Primary Element</th><th>User Action</th></tr><tr><td>Message board</td><td>Posts with full formatting</td><td>Make announcements, decisions, and discussions that persist <sup class="cite"><a href="#src-i6" data-detail='Message board — For announcements, decisions, and discussions that don&#39;t need to be real-time. Posts have full formatting and can be commented on'>[6]</a></sup></td></tr><tr><td>To-do lists</td><td>Named task lists</td><td>Create and manage tasks as a team <sup class="cite"><a href="#src-i7" data-detail='To-do lists — Created by the team, not assigned top-down. Tasks are grouped into named lists. Anyone can create to-dos'>[7]</a></sup></td></tr><tr><td>Campfire</td><td>Project chat room</td><td>Real-time communication scoped to project team <sup class="cite"><a href="#src-i8" data-detail='Campfire (group chat) — Per-project chat room for loose, real-time communication. Not the same as a company-wide Slack channel; scoped to the people working on the project'>[8]</a></sup></td></tr><tr><td>Schedule</td><td>Milestone dates and events</td><td>View project timeline <sup class="cite"><a href="#src-i9" data-detail='Schedule — Milestone dates and events relevant to the project, visible to the whole team'>[9]</a></sup></td></tr><tr><td>Hey! menu</td><td>Centralized notifications</td><td>Check all notifications in one place <sup class="cite"><a href="#src-i10" data-detail='Hey! and Pings — The Hey! menu centralizes all notifications'>[10]</a></sup></td></tr></table></div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val"><table class="kv"><tr><th>Page</th><th>Primary Element</th><th>User Action</th></tr><tr><td>Home</td><td>Project list with My Project and sample projects</td><td>Navigate to existing projects</td></tr><tr><td>Project view</td><td>Tool tabs (Message Board, To-dos, Docs &amp; Files)</td><td>Access project tools</td></tr><tr><td>Template creation</td><td>Template name input field</td><td>Name and configure project template</td></tr></table></div></div></div><p class="fd-note">Spec lists tool pages; product shows navigation and templates.</p></div></div><div class="fd" data-status="minor_drift"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Feature Stack</span><span class="fd-st fd-st-minor-drift">minor drift</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val"><table class="kv"><tr><th>Feature</th><th>Prominence</th><th>Clicks</th><th>Kano</th></tr><tr><td>Message board</td><td>high</td><td>?</td><td>must-have</td></tr><tr><td>To-do lists</td><td>high</td><td>?</td><td>must-have</td></tr><tr><td>Campfire group chat</td><td>high</td><td>?</td><td>must-have</td></tr><tr><td>Schedule</td><td>med</td><td>?</td><td>must-have</td></tr><tr><td>Automatic check-ins</td><td>med</td><td>?</td><td>performance</td></tr><tr><td>Hill Charts</td><td>med</td><td>?</td><td>delighter</td></tr><tr><td>Mission Control</td><td>low</td><td>?</td><td>performance</td></tr><tr><td>Lineup</td><td>low</td><td>?</td><td>performance</td></tr></table></div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val"><table class="kv"><tr><th>Feature</th><th>Prominence</th><th>Clicks</th><th>Kano</th></tr><tr><td>Projects</td><td>high</td><td>1</td><td>must-have</td></tr><tr><td>Message Board</td><td>high</td><td>2</td><td>must-have</td></tr><tr><td>To-dos</td><td>high</td><td>2</td><td>must-have</td></tr><tr><td>Schedule/Lineup</td><td>med</td><td>1</td><td>performance</td></tr><tr><td>Templates</td><td>med</td><td>2</td><td>performance</td></tr><tr><td>Pings</td><td>med</td><td>1</td><td>delighter</td></tr><tr><td>Hey!</td><td>low</td><td>1</td><td>delighter</td></tr></table></div></div></div><p class="fd-note">Core features align; product adds Projects and Templates prominence.</p></div></div><div class="fd" data-status="missing_intended"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Color Semantics</span><span class="fd-st fd-st-missing-intended">not in spec</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val"><span class="empty">&mdash;</span></div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val"><table class="kv"><tr><th>Color</th><th>Meaning</th></tr><tr><td><span class="swatch" style="background:green"></span> green</td><td>primary action buttons like 'Upgrade to add another project' and 'Invite people'</td></tr><tr><td><span class="swatch" style="background:gray"></span> gray</td><td>secondary navigation and inactive states</td></tr><tr><td><span class="swatch" style="background:brown"></span> brown</td><td>section headers like 'SAMPLE PROJECTS' and 'YOUR SCHEDULE'</td></tr></table></div></div></div><p class="fd-note">Product documents color usage; spec omits this detail.</p></div></div></div>
+</section>
+<section class="sec" id="workflows">
+  <div class="sec-head" data-section="workflows">
+    <span class="sec-score clr-1">1<span class="sec-score-denom">/4</span></span>
+    <span class="sec-title">Workflows</span>
+    <span class="toggle-icon">+</span>
+  </div>
+  <div class="sec-body"><div class="fd" data-status="major_drift"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Journeys</span><span class="fd-st fd-st-major-drift">major drift</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val"><table class="kv"><tr><th>Journey</th><th>Steps</th><th>Success State</th></tr><tr><td>Six-week cycle execution</td><td>Team receives shaped work from betting table → Team defines their own tasks within project boundaries → Team makes design decisions on the fly → Team ships work within six-week deadline</td><td>Meaningful work shipped on consistent cadence <sup class="cite"><a href="#src-i11" data-detail='Neither produces the feeling of &#39;making it&#39; — shipping meaningful work on a consistent cadence'>[11]</a></sup></td></tr><tr><td>Shape Up process</td><td>Set boundaries for the problem → Rough out elements of the solution → Address risks and rabbit holes → Write the pitch → Present to betting table → Get selected for next cycle</td><td>Shaped work committed to six-week cycle <sup class="cite"><a href="#src-i12" data-detail='Four steps: Set boundaries → Rough out elements → Address risks and rabbit holes → Write the pitch'>[12]</a></sup></td></tr></table></div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val"><table class="kv"><tr><th>Journey</th><th>Steps</th><th>Success State</th></tr><tr><td>Create new project</td><td>Navigate to home → Click upgrade to add project → Set up project details → Configure project tools</td><td>New project appears in project list</td></tr><tr><td>Add tasks to project</td><td>Navigate to project → Click To-dos → Click New list → Name the list → Add individual tasks</td><td>Task list visible in project</td></tr><tr><td>Create project template</td><td>Navigate to templates → Click new template → Name template → Configure settings → Set up template structure</td><td>Template available for future projects</td></tr></table></div></div></div><p class="fd-note">Spec shows Shape Up cycles; product shows basic project creation.</p></div></div><div class="fd" data-status="missing_intended"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Cog Walkthrough</span><span class="fd-st fd-st-missing-intended">not in spec</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val"><span class="empty">&mdash;</span></div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val"><div class="cw"><div class="cw-h">Step</div><div class="cw-h">Try</div><div class="cw-h">See</div><div class="cw-h">Link</div><div class="cw-h">Progress</div><div>Navigate to home</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div>Click upgrade to add project</div><div class="cw-friction">Friction</div><div class="cw-pass">Pass</div><div class="cw-friction">Friction</div><div class="cw-pass">Pass</div><div class="cw-reason">Button says 'Upgrade' which suggests payment rather than project creation</div><div>Navigate to project</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div>Click To-dos</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div>Click New list</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div>Name the list</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div class="cw-friction">Friction</div><div class="cw-reason">Form submission buttons failed to respond in testing</div><div>Navigate to templates</div><div class="cw-friction">Friction</div><div class="cw-friction">Friction</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div class="cw-reason">Templates not discoverable from main navigation, requires direct URL</div><div>Click new template</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div>Name template</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div></div></div></div></div><p class="fd-note">Product provides detailed walkthrough analysis; spec has none.</p></div></div><div class="fd" data-status="missing_intended"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Friction Map</span><span class="fd-st fd-st-missing-intended">not in spec</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val"><span class="empty">&mdash;</span></div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val"><table class="kv"><tr><td>Navigate to home</td><td>zero</td></tr><tr><td>Click upgrade to add project</td><td>acceptable</td></tr><tr><td>Navigate to project</td><td>zero</td></tr><tr><td>Click To-dos</td><td>zero</td></tr><tr><td>Click New list</td><td>zero</td></tr><tr><td>Name the list</td><td>guided-only</td></tr><tr><td>Navigate to templates</td><td>guided-only</td></tr><tr><td>Click new template</td><td>zero</td></tr><tr><td>Name template</td><td>zero</td></tr></table></div></div></div><p class="fd-note">Product maps friction levels; spec has none.</p></div></div></div>
+</section>
+<section class="sec" id="onboarding">
+  <div class="sec-head" data-section="onboarding">
+    <span class="sec-score clr-0">0<span class="sec-score-denom">/4</span></span>
+    <span class="sec-title">Onboarding</span>
+    <span class="toggle-icon">+</span>
+  </div>
+  <div class="sec-body"><div class="fd" data-status="missing_intended"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">First Minute</span><span class="fd-st fd-st-missing-intended">not in spec</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val"><span class="empty">&mdash;</span></div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val">User sees a demo account with sample projects showing Basecamp's structure of projects containing message boards, to-dos, and files <sup class="cite"><a href="https://3.basecamp.com/6176273/" target="_blank" rel="noopener" data-detail='Sample projects &#39;Getting Started&#39; and &#39;Making a Podcast&#39; demonstrate typical Basecamp project organization'>[7]</a></sup></div></div></div><p class="fd-note">Product shows demo account experience; spec omits onboarding.</p></div></div><div class="fd" data-status="missing_intended"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Time To Value</span><span class="fd-st fd-st-missing-intended">not in spec</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val"><span class="empty">&mdash;</span></div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val">Explore sample projects to understand how Basecamp organizes work</div></div></div><p class="fd-note">Product describes sample project exploration; spec omits this.</p></div></div><div class="fd" data-status="missing_intended"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Time To Value Clicks</span><span class="fd-st fd-st-missing-intended">not in spec</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val"><span class="empty">&mdash;</span></div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val">1</div></div></div><p class="fd-note">Product measures clicks to value; spec omits metrics.</p></div></div><div class="fd" data-status="missing_intended"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Assessment</span><span class="fd-st fd-st-missing-intended">not in spec</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val"><span class="empty">&mdash;</span></div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val">Learning through sample projects rather than guided onboarding; uses real project examples with clear tool categories</div></div></div><p class="fd-note">Product evaluates onboarding approach; spec lacks assessment.</p></div></div></div>
+</section>
+<section class="sec" id="emotional_register">
+  <div class="sec-head" data-section="emotional_register">
+    <span class="sec-score clr-4">4<span class="sec-score-denom">/4</span></span>
+    <span class="sec-title">Emotional Register</span>
+    <span class="toggle-icon">+</span>
+  </div>
+  <div class="sec-body"><div class="fd" data-status="aligned"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Primary Emotion</span><span class="fd-st fd-st-aligned">aligned</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val">Calm</div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val">Calm</div></div></div></div></div><div class="fd" data-status="aligned"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Feels Like</span><span class="fd-st fd-st-aligned">aligned</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val">Fewer meetings, less process overhead, and a clear cadence of meaningful shipments <sup class="cite"><a href="#src-i13" data-detail='Basecamp markets itself to teams that want fewer meetings, less process overhead, and a clear cadence of meaningful shipments rather than an endless stream of micro-tasks'>[13]</a></sup></div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val">Having organized project folders where everything has its designated place and team members know where to find information <sup class="cite"><a href="https://3.basecamp.com/6176273/" target="_blank" rel="noopener" data-detail='Clean layout with organized sections and clear project boundaries creates structured workspace feeling'>[8]</a></sup></div></div></div><p class="fd-note">Both emphasize organization and clarity over chaos.</p></div></div><div class="fd" data-status="aligned"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Does Not Feel Like</span><span class="fd-st fd-st-aligned">aligned</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val">An endless stream of micro-tasks or scattered coordination chaos <sup class="cite"><a href="#src-i13" data-detail='Basecamp markets itself to teams that want fewer meetings, less process overhead, and a clear cadence of meaningful shipments rather than an endless stream of micro-tasks'>[13]</a></sup></div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val">Does not feel like a rapid-fire productivity system (Slack/Discord) — interactions are structured around projects rather than continuous streams <sup class="cite"><a href="https://3.basecamp.com/6176273/projects/46519877" target="_blank" rel="noopener" data-detail='Communication happens through Message Board and Pings rather than chat streams, with structured project contexts'>[9]</a></sup></div></div></div><p class="fd-note">Both reject scattered coordination and task streams.</p></div></div></div>
+</section>
+
+
+<div class="sources">
+  <div class="src-block"><p class="src-heading">Specification sources</p><ul class="src-list"><li id="src-i1"><span class="src-num">1</span> Basecamp organizes work around projects — each project has its own message board, to-do lists, file storage, schedule, and group chat (Campfire). The goal is to avoid tool sprawl: one place for everything related to a piece of work</li><li id="src-i2"><span class="src-num">2</span> Teams are either scattered across too many tools (half in GitHub issues, half in Slack, decisions lost in email threads) or suffer from the opposite extreme: a heavy Scrum or Jira process that generates overhead without progress</li><li id="src-i3"><span class="src-num">3</span> Basecamp — $299/month flat, unlimited users. No per-seat pricing. This is explicitly positioned as anti-enterprise-SaaS: one price, everyone in, no negotiation</li><li id="src-i4"><span class="src-num">4</span> Software product teams at established companies — particularly those burned by Jira's complexity or the chaos of Slack + email + spreadsheet coordination</li><li id="src-i5"><span class="src-num">5</span> one place for everything related to a piece of work, rather than decisions scattered across Slack, Notion, Jira, and email</li><li id="src-i6"><span class="src-num">6</span> Message board — For announcements, decisions, and discussions that don't need to be real-time. Posts have full formatting and can be commented on</li><li id="src-i7"><span class="src-num">7</span> To-do lists — Created by the team, not assigned top-down. Tasks are grouped into named lists. Anyone can create to-dos</li><li id="src-i8"><span class="src-num">8</span> Campfire (group chat) — Per-project chat room for loose, real-time communication. Not the same as a company-wide Slack channel; scoped to the people working on the project</li><li id="src-i9"><span class="src-num">9</span> Schedule — Milestone dates and events relevant to the project, visible to the whole team</li><li id="src-i10"><span class="src-num">10</span> Hey! and Pings — The Hey! menu centralizes all notifications</li><li id="src-i11"><span class="src-num">11</span> Neither produces the feeling of 'making it' — shipping meaningful work on a consistent cadence</li><li id="src-i12"><span class="src-num">12</span> Four steps: Set boundaries → Rough out elements → Address risks and rabbit holes → Write the pitch</li><li id="src-i13"><span class="src-num">13</span> Basecamp markets itself to teams that want fewer meetings, less process overhead, and a clear cadence of meaningful shipments rather than an endless stream of micro-tasks</li></ul></div><div class="src-block"><p class="src-heading">Reality sources</p><ul class="src-list"><li id="src-m1"><span class="cite src-cite"><a href="https://3.basecamp.com/6176273/" target="_blank" rel="noopener" data-thumb='screenshots/001_Home.png'>▣ 1</a></span> Homepage shows 'Lineup' navigation for project schedules and 'Your Schedule' and 'Your Assignments' sections</li><li id="src-m2"><span class="cite src-cite"><a href="https://3.basecamp.com/6176273/buckets/46519877/todosets/9685835865" target="_blank" rel="noopener" data-detail='https://3.basecamp.com/6176273/buckets/46519877/todosets/9685835865'>2</a></span> Task creation requires navigating to project, then To-dos, then New list with multiple form fields</li><li id="src-m3"><span class="cite src-cite"><a href="https://3.basecamp.com/6176273/circles" target="_blank" rel="noopener" data-detail='https://3.basecamp.com/6176273/circles'>3</a></span> Pings section shows 'You don't have any Pings yet' suggesting structured rather than instant communication</li><li id="src-m4"><span class="cite src-cite"><a href="https://3.basecamp.com/6176273/lineup" target="_blank" rel="noopener" data-detail='https://3.basecamp.com/6176273/lineup'>4</a></span> Lineup page shows 'Scheduled projects' focused on project timelines, not calendar appointments</li><li id="src-m5"><span class="cite src-cite"><a href="https://3.basecamp.com/6176273/projects/46519877" target="_blank" rel="noopener" data-detail='https://3.basecamp.com/6176273/projects/46519877'>5</a></span> Docs &amp; Files appears as tab within project context, not standalone document management</li><li id="src-m6"><span class="cite src-cite"><a href="https://3.basecamp.com/6176273/" target="_blank" rel="noopener" data-thumb='screenshots/002_Home.png'>▣ 6</a></span> Homepage prominently displays project list with sample projects showing Message Board, To-dos, Docs &amp; Files structure</li><li id="src-m7"><span class="cite src-cite"><a href="https://3.basecamp.com/6176273/" target="_blank" rel="noopener" data-detail='https://3.basecamp.com/6176273/'>7</a></span> Sample projects 'Getting Started' and 'Making a Podcast' demonstrate typical Basecamp project organization</li><li id="src-m8"><span class="cite src-cite"><a href="https://3.basecamp.com/6176273/" target="_blank" rel="noopener" data-detail='https://3.basecamp.com/6176273/'>8</a></span> Clean layout with organized sections and clear project boundaries creates structured workspace feeling</li><li id="src-m9"><span class="cite src-cite"><a href="https://3.basecamp.com/6176273/projects/46519877" target="_blank" rel="noopener" data-detail='https://3.basecamp.com/6176273/projects/46519877'>9</a></span> Communication happens through Message Board and Pings rather than chat streams, with structured project contexts</li></ul></div>
+</div>
+
+<p class="ftr">Akashic v0 &mdash; spec alignment from blind navigation</p>
+
+<script>
+(function() {
+  // Section toggle
+  document.querySelectorAll('.sec-head').forEach(function(h) {
+    h.addEventListener('click', function() {
+      var sec = h.closest('.sec');
+      sec.classList.toggle('open');
+      var icon = h.querySelector('.toggle-icon');
+      if (icon) icon.textContent = sec.classList.contains('open') ? '−' : '+';
+    });
+  });
+  // Field toggle
+  document.querySelectorAll('.fd-head').forEach(function(h) {
+    h.addEventListener('click', function() {
+      var fd = h.closest('.fd');
+      fd.classList.toggle('open');
+      var icon = h.querySelector('.toggle-icon');
+      if (icon) icon.textContent = fd.classList.contains('open') ? '−' : '+';
+    });
+  });
+  // Citation popovers
+  var popup = null, overlay = null;
+  var isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  function clamp(a) {
+    if (!popup) return;
+    popup.classList.remove('below');
+    popup.style.left = '';
+    popup.style.transform = '';
+    var r = popup.getBoundingClientRect();
+    if (r.top < 0) popup.classList.add('below');
+    var r2 = popup.getBoundingClientRect();
+    if (r2.left < 8) {
+      popup.style.left = '0';
+      popup.style.transform = 'translateX(' + (8 - r2.left) + 'px)';
+      popup.style.setProperty('--arrow-left', (a.getBoundingClientRect().left - popup.getBoundingClientRect().left + a.offsetWidth/2) + 'px');
+    } else if (r2.right > window.innerWidth - 8) {
+      var sh = r2.right - window.innerWidth + 8;
+      popup.style.left = '0';
+      popup.style.transform = 'translateX(-' + (r2.width/2 + sh) + 'px)';
+      popup.style.setProperty('--arrow-left', (a.getBoundingClientRect().left - popup.getBoundingClientRect().left + a.offsetWidth/2) + 'px');
+    }
+    popup.style.opacity = '1';
+  }
+  function show(a) {
+    hide();
+    var detail = a.getAttribute('data-detail');
+    var thumb = a.getAttribute('data-thumb');
+    if (!detail && !thumb) return;
+    popup = document.createElement('span');
+    popup.className = 'cite-popup';
+    popup.style.opacity = '0';
+    if (detail) popup.textContent = detail;
+    if (thumb) {
+      var img = document.createElement('img');
+      img.src = thumb;
+      img.alt = 'Screenshot';
+      if (!isTouch) img.onload = function() { clamp(a); };
+      popup.appendChild(img);
+    }
+    a.closest('.cite').appendChild(popup);
+    if (isTouch) {
+      overlay = document.createElement('div');
+      overlay.className = 'cite-overlay';
+      overlay.addEventListener('click', hide);
+      document.body.appendChild(overlay);
+      popup.style.opacity = '1';
+    } else { clamp(a); }
+  }
+  function hide() {
+    if (overlay) { overlay.remove(); overlay = null; }
+    if (popup) { popup.remove(); popup = null; }
+  }
+  document.addEventListener('pointerenter', function(e) {
+    if (isTouch) return;
+    var a = e.target.closest('.cite a');
+    if (a) show(a);
+  }, true);
+  document.addEventListener('pointerleave', function(e) {
+    if (isTouch) return;
+    if (e.target.closest('.cite a')) hide();
+  }, true);
+  document.addEventListener('click', function(e) {
+    if (!isTouch) return;
+    var a = e.target.closest('.cite a');
+    if (a) {
+      e.preventDefault();
+      var c = a.closest('.cite');
+      if (popup && popup.parentElement === c) { hide(); } else { show(a); }
+    }
+  }, true);
+})();
+</script>
+</body>
+</html>

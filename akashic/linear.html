@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Akashic &mdash; linear.app</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+      Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.6;
+    color: #111;
+    background: #fff;
+    padding: 3rem 2rem 6rem;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+  a { color: inherit; }
+  a:hover { color: #000; }
+  ::selection { background: rgba(0,0,0,0.08); }
+
+  /* ── header ── */
+  .hdr { margin-bottom: 3rem; }
+  .hdr-brand {
+    font-size: 14px;
+    opacity: 0.35;
+    margin-bottom: 0.75rem;
+  }
+  .hdr h1 {
+    font-size: 22px;
+    font-weight: 500;
+    line-height: 1.35;
+    margin-bottom: 0.25rem;
+  }
+  .hdr p {
+    font-size: 14px;
+    opacity: 0.4;
+  }
+
+  /* ── score colors (dark-tinted, close to black) ── */
+  .clr-4 { color: #2a7a42; }
+  .clr-3 { color: #2a7a42; }
+  .clr-2 { color: #8a6d2a; }
+  .clr-1 { color: #a33; }
+  .clr-0 { color: #a33; }
+
+  /* ── score row (premise + score) ── */
+  .score-row {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 0.25rem;
+  }
+  .score-block {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── premise ── */
+  .premise {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    font-size: 14px;
+    margin-bottom: 2rem;
+  }
+  .premise-inputs {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 1.2rem;
+    padding-right: 14px;
+  }
+  .premise-inputs::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0.5em;
+    bottom: 0.5em;
+    width: 10px;
+    border: 1px solid rgba(0,0,0,0.25);
+    border-left: none;
+    border-radius: 0 4px 4px 0;
+  }
+  .premise-label {
+    color: rgba(0,0,0,0.55);
+    font-weight: 500;
+    line-height: 1;
+  }
+  .premise-bracket { display: none; }
+  .premise-arrow {
+    width: 24px;
+    height: 1px;
+    background: rgba(0,0,0,0.25);
+    flex-shrink: 0;
+  }
+
+  /* ── headline ── */
+  .headline {
+    font-size: 16px;
+    line-height: 1.55;
+    max-width: 600px;
+    margin-bottom: 0.5rem;
+    font-weight: 400;
+  }
+
+  /* ── tldr ── */
+  .tldr {
+    margin-bottom: 3rem;
+  }
+  .tldr-heading {
+    font-size: 13px;
+    font-weight: 500;
+    opacity: 0.3;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.5rem;
+  }
+  .tldr ul {
+    margin: 0;
+    padding-left: 1.2em;
+    font-size: 15px;
+    line-height: 1.65;
+    opacity: 0.55;
+    max-width: 600px;
+  }
+  .tldr ul li {
+    margin-bottom: 0.35rem;
+    list-style: disc;
+  }
+
+  /* ── overall ── */
+  .overall {
+    font-size: 64px;
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    margin-bottom: 0.25rem;
+  }
+  .overall-sub {
+    font-size: 14px;
+    opacity: 0.35;
+    margin-bottom: 0;
+  }
+
+  /* ── sections ── */
+  .sec {
+    margin-bottom: 0;
+    border-top: 1px solid rgba(0,0,0,0.08);
+  }
+  .sec-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    padding: 1.25rem 0 1rem;
+    cursor: pointer;
+    user-select: none;
+  }
+  .sec-score {
+    font-size: 20px;
+    font-weight: 500;
+    min-width: 1.5rem;
+    text-align: right;
+  }
+  .sec-score-denom {
+    font-size: 13px;
+    font-weight: 400;
+    opacity: 0.3;
+  }
+  .sec-title {
+    font-size: 16px;
+    font-weight: 500;
+  }
+  .toggle-icon {
+    font-size: 14px;
+    font-weight: 400;
+    color: rgba(0,0,0,0.3);
+    line-height: 1;
+    width: 1em;
+    text-align: center;
+    flex-shrink: 0;
+    transition: color 0.1s;
+  }
+  .sec-head .toggle-icon {
+    font-size: 16px;
+    margin-left: 0.25rem;
+  }
+  .sec-body {
+    display: none;
+    padding: 0 0 2rem 2.75rem;
+  }
+  .sec.open .sec-body {
+    display: block;
+  }
+
+  /* ── field diff ── */
+  .fd {
+    border-top: 1px solid rgba(0,0,0,0.06);
+  }
+  .fd:first-child {
+    border-top: none;
+  }
+  .fd-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    padding: 0.5rem 0;
+    cursor: pointer;
+    user-select: none;
+  }
+  .fd-head:hover {
+    opacity: 0.7;
+  }
+  .fd-body {
+    display: none;
+    padding: 0 0 1rem 0;
+  }
+  .fd.open .fd-body {
+    display: block;
+  }
+  .fd-label {
+    font-size: 14px;
+    font-weight: 400;
+    opacity: 0.45;
+    line-height: 1.4;
+  }
+  .fd-st {
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .fd-st-aligned { color: #2a7a42; }
+  .fd-st-minor-drift { color: #8a6d2a; }
+  .fd-st-major-drift { color: #a33; font-weight: 600; }
+  .fd-st-missing-intended { color: #6a4a9a; }
+  .fd-st-missing-implicit { color: #a33; font-weight: 600; }
+  .fd-st-skipped { color: #888; }
+  .fd-st-empty { color: #888; }
+
+  /* ── comparison columns ── */
+  .fd-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+  .fd-col-label {
+    font-size: 11px;
+    font-weight: 500;
+    opacity: 0.3;
+    margin-bottom: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .fd-val {
+    font-size: 15px;
+    line-height: 1.55;
+  }
+  .fd-val ul { margin: 0; padding-left: 1.2em; }
+  .fd-val ul li { margin-bottom: 4px; list-style: disc; font-size: 14px; }
+  .fd-val .kv { width: 100%; font-size: 14px; border-collapse: collapse; }
+  .fd-val .kv th { font-weight: 500; font-size: 11px; opacity: 0.4; text-transform: uppercase; letter-spacing: 0.03em; text-align: left; padding: 4px 12px 4px 0; border-bottom: 1px solid rgba(0,0,0,0.08); white-space: nowrap; }
+  .fd-val .kv td { padding: 4px 12px 4px 0; border-bottom: 1px solid rgba(0,0,0,0.04); vertical-align: top; }
+  .fd-val .kv td:first-child { white-space: nowrap; }
+  .fd-val .empty { opacity: 0.25; font-style: italic; }
+
+  /* ── cog walkthrough grid ── */
+  .cw {
+    display: grid;
+    grid-template-columns: 1.5fr repeat(4, auto);
+    gap: 0;
+    font-size: 13px;
+  }
+  .cw > div {
+    padding: 5px 10px 5px 0;
+    border-bottom: 1px solid rgba(0,0,0,0.04);
+  }
+  .cw-h {
+    font-weight: 500;
+    font-size: 11px;
+    opacity: 0.4;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+  }
+  .cw-pass { color: #16a34a; }
+  .cw-friction { color: #b45309; }
+  .cw-fail { color: #dc2626; }
+  .cw-reason {
+    grid-column: 1 / -1;
+    font-size: 12px;
+    opacity: 0.5;
+    padding: 0 0 6px 12px;
+  }
+
+  /* ── color swatch ── */
+  .swatch {
+    display: inline-block;
+    width: 12px; height: 12px;
+    border-radius: 3px;
+    vertical-align: middle;
+    border: 1px solid rgba(0,0,0,0.15);
+    margin-right: 2px;
+  }
+
+  /* ── note ── */
+  .fd-note {
+    font-size: 14px;
+    opacity: 0.4;
+    line-height: 1.55;
+    max-width: 600px;
+  }
+
+  /* ── citations ── */
+  .cite {
+    font-size: 11px;
+    line-height: 1;
+    vertical-align: super;
+    position: relative;
+  }
+  .cite a {
+    color: #4361ee;
+    text-decoration: underline;
+    text-decoration-color: rgba(67,97,238,0.35);
+    text-underline-offset: 1px;
+    cursor: pointer;
+  }
+  .cite a:hover {
+    color: #3a0ca3;
+    text-decoration-color: #3a0ca3;
+  }
+  .cite-popup {
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1a1a1a;
+    color: #e8e8e8;
+    font-size: 13px;
+    line-height: 1.45;
+    padding: 8px 12px;
+    border-radius: 4px;
+    max-width: 360px;
+    min-width: 160px;
+    width: max-content;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+    z-index: 1000;
+    pointer-events: none;
+    white-space: normal;
+    transition: opacity 0.08s ease;
+  }
+  .cite-popup img {
+    display: block;
+    max-width: 320px;
+    border-radius: 3px;
+    margin-top: 6px;
+  }
+  .cite-popup::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: var(--arrow-left, 50%);
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: #1a1a1a;
+  }
+  .cite-popup.below {
+    bottom: auto;
+    top: calc(100% + 6px);
+  }
+  .cite-popup.below::after {
+    top: auto;
+    bottom: 100%;
+    border-top-color: transparent;
+    border-bottom-color: #1a1a1a;
+  }
+  .cite-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.15);
+    z-index: 999;
+  }
+
+  /* ── sources footnotes ── */
+  .sources {
+    margin-top: 4rem;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(0,0,0,0.08);
+  }
+  .src-block { margin-bottom: 1.5rem; }
+  .src-heading {
+    font-size: 13px;
+    font-weight: 500;
+    opacity: 0.35;
+    margin-bottom: 0.25rem;
+  }
+  .src-list {
+    margin: 0;
+    padding: 0;
+    font-size: 13px;
+    line-height: 1.6;
+    list-style: none;
+  }
+  .src-list li {
+    margin-bottom: 4px;
+    color: rgba(0,0,0,0.5);
+  }
+  .src-cite {
+    font-size: 13px;
+    vertical-align: baseline;
+    line-height: 1;
+  }
+  .src-num {
+    display: inline-block;
+    min-width: 1.5em;
+    text-align: right;
+    margin-right: 0.5em;
+    font-size: 13px;
+  }
+  .src-cite a {
+    display: inline-block;
+    min-width: 1.5em;
+    text-align: right;
+    margin-right: 0.5em;
+    color: #4361ee;
+    text-decoration: underline;
+    text-decoration-color: rgba(67,97,238,0.35);
+    cursor: pointer;
+  }
+  .src-cite a:hover {
+    color: #3a0ca3;
+    text-decoration-color: #3a0ca3;
+  }
+  .src-url {
+    font-size: 12px;
+    opacity: 0.6;
+    text-decoration: underline;
+    text-decoration-color: rgba(0,0,0,0.15);
+  }
+  .sources a { text-decoration: underline; text-decoration-color: rgba(0,0,0,0.15); }
+
+  /* ── footer ── */
+  .ftr {
+    margin-top: 4rem;
+    font-size: 13px;
+    opacity: 0.2;
+  }
+
+  /* ── responsive ── */
+  @media (max-width: 600px) {
+    body { padding: 1.5rem 1rem 4rem; }
+    .fd-pair { grid-template-columns: 1fr; gap: 1rem; }
+    .cite-popup {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      top: auto;
+      transform: none;
+      max-width: 100%; width: 100%;
+      border-radius: 8px 8px 0 0;
+      max-height: 70vh;
+      overflow-y: auto;
+      pointer-events: auto;
+      padding: 16px;
+    }
+    .cite-popup::after { display: none; }
+    .cite-popup img { max-width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <p class="hdr-brand">◈ Akashic</p>
+  <h1>linear.app</h1>
+  <p>2026-03-16 5:45 PM</p>
+</div>
+
+<div class="score-row">
+  <div class="premise">
+    <div class="premise-inputs">
+      <span class="premise-label">Specification</span>
+      <span class="premise-label">Reality</span>
+    </div>
+    <div class="premise-bracket"></div>
+    <div class="premise-arrow"></div>
+  </div>
+  <div class="score-block">
+    <div class="overall clr-2">2.2<span style="font-size:24px;opacity:0.25"> / 4</span></div>
+    <p class="overall-sub">overall alignment</p>
+  </div>
+</div>
+<p class="headline">Ships core promise but missing strategic features like Cycles and Roadmaps.</p>
+
+<div class="tldr"><p class="tldr-heading">Key findings</p><ul><li>Spec promises Cycles/Roadmaps; product shows basic tracking</li><li>Strategic workflows missing from actual product</li><li>Product more individual-focused than team-focused</li><li>Core developer positioning perfectly aligned</li></ul></div>
+<section class="sec" id="product_identity">
+  <div class="sec-head" data-section="product_identity">
+    <span class="sec-score clr-3">3<span class="sec-score-denom">/4</span></span>
+    <span class="sec-title">Product Identity</span>
+    <span class="toggle-icon">+</span>
+  </div>
+  <div class="sec-body"><div class="fd" data-status="aligned"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Jtbd</span><span class="fd-st fd-st-aligned">aligned</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val">Minimize the time required to track and coordinate software development work for engineering teams</div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val">Minimize the time it takes to track and manage software development issues across teams <sup class="cite"><a href="https://linear.app/mmmmmmmmmmmm/team/MMM/active" target="_blank" rel="noopener" data-detail='Page title shows &#39;Active issues&#39; as primary view' data-thumb='screenshots/001_Mmmmmmmmmmmm___Active_issues.png'>[▣1]</a></sup><sup class="cite"><a href="https://linear.app/mmmmmmmmmmmm/team/MMM/active" target="_blank" rel="noopener" data-detail='Navigation includes specialized sections like &#39;Backlog&#39; and &#39;My issues&#39;'>[2]</a></sup></div></div></div><p class="fd-note">Same core goal; spec says 'coordinate,' product says 'manage.'</p></div></div><div class="fd" data-status="aligned"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Description</span><span class="fd-st fd-st-aligned">aligned</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val">Linear is a project management and issue tracking platform built specifically for software product teams <sup class="cite"><a href="#src-i1" data-detail='Linear is a project management and issue tracking platform built specifically for software product teams'>[1]</a></sup></div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val">Linear is a project management tool designed for software development teams to manage issues, projects, and workflows <sup class="cite"><a href="https://linear.app/mmmmmmmmmmmm/team/MMM/active" target="_blank" rel="noopener" data-detail='Site consistently refers to &#39;issues&#39; and &#39;projects&#39; rather than generic tasks'>[3]</a></sup><sup class="cite"><a href="https://linear.app/mmmmmmmmmmmm/projects/all" target="_blank" rel="noopener" data-detail='Projects section prominently featured in main navigation'>[4]</a></sup></div></div></div><p class="fd-note">Identical meaning; spec says 'platform,' product says 'tool.'</p></div></div><div class="fd" data-status="aligned"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Anti Goals</span><span class="fd-st fd-st-aligned">aligned</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val"><ul><li>NOT infinitely configurable like Jira</li><li>NOT for operations, HR, or marketing teams</li><li>NOT designed for large enterprise complex multi-team environments</li></ul></div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val"><ul><li>NOT a general business project manager — every issue has developer-specific fields like GitHub integration <sup class="cite"><a href="https://linear.app/mmmmmmmmmmmm/settings/integrations/github" target="_blank" rel="noopener" data-detail='GitHub integration appears in multiple contexts including settings'>[5]</a></sup></li><li>NOT a simple task app — requires understanding of software development terminology like 'backlog', 'active issues' <sup class="cite"><a href="https://linear.app/mmmmmmmmmmmm/team/MMM/backlog" target="_blank" rel="noopener" data-detail='Active issues and Backlog views use software development terminology'>[6]</a></sup></li><li>NOT focused on documentation — core UI is entirely about issue tracking and project status <sup class="cite"><a href="https://linear.app/mmmmmmmmmmmm/team/MMM/active" target="_blank" rel="noopener" data-detail='No documentation or wiki features visible in main interface'>[7]</a></sup></li><li>NOT a communication tool — no chat, comments, or messaging features visible in main interface <sup class="cite"><a href="https://linear.app/mmmmmmmmmmmm/team/MMM/active" target="_blank" rel="noopener" data-detail='Interface focused on issue tracking without communication features'>[8]</a></sup></li></ul></div></div></div><p class="fd-note">Different examples but same intent: software-dev-only positioning.</p></div></div></div>
+</section>
+<section class="sec" id="target_user">
+  <div class="sec-head" data-section="target_user">
+    <span class="sec-score clr-3">3<span class="sec-score-denom">/4</span></span>
+    <span class="sec-title">Target User</span>
+    <span class="toggle-icon">+</span>
+  </div>
+  <div class="sec-body"><div class="fd" data-status="minor_drift"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Role</span><span class="fd-st fd-st-minor-drift">minor drift</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val">Engineering teams at software companies — from startups to mid-size tech organizations. Built with developers and PMs in mind <sup class="cite"><a href="#src-i2" data-detail='Engineering teams at software companies — from startups to mid-size tech organizations. Built with developers and PMs in mind, not operations, HR, or marketing teams'>[2]</a></sup></div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val">Software developer or engineering team lead</div></div></div><p class="fd-note">Spec targets teams; product targets individual developers.</p></div></div><div class="fd" data-status="minor_drift"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Work Context</span><span class="fd-st fd-st-minor-drift">minor drift</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val">Software product development teams that need speed, clarity, and reduced process overhead <sup class="cite"><a href="#src-i3" data-detail='Teams that need speed, clarity, and reduced process overhead'>[3]</a></sup></div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val">Software development team using GitHub integration</div></div></div><p class="fd-note">Spec emphasizes speed/clarity; product emphasizes GitHub integration.</p></div></div><div class="fd" data-status="aligned"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Tech Level</span><span class="fd-st fd-st-aligned">aligned</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val">Technical</div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val">Technical</div></div></div></div></div><div class="fd" data-status="aligned"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Domain</span><span class="fd-st fd-st-aligned">aligned</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val">Software development, project management, agile workflows</div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val">Software development and project management</div></div></div><p class="fd-note">Product omits 'agile workflows' but covers core domain.</p></div></div><div class="fd" data-status="aligned"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Reading Level</span><span class="fd-st fd-st-aligned">aligned</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val">College</div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val">College</div></div></div></div></div></div>
+</section>
+<section class="sec" id="value_hierarchy">
+  <div class="sec-head" data-section="value_hierarchy">
+    <span class="sec-score clr-1">1<span class="sec-score-denom">/4</span></span>
+    <span class="sec-title">Value Hierarchy</span>
+    <span class="toggle-icon">+</span>
+  </div>
+  <div class="sec-body"><div class="fd" data-status="minor_drift"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Value Prop</span><span class="fd-st fd-st-minor-drift">minor drift</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val">Speed, clarity, and reduced process overhead for software development teams <sup class="cite"><a href="#src-i4" data-detail='Teams that need speed, clarity, and reduced process overhead'>[4]</a></sup></div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val">Track and manage development issues with team visibility <sup class="cite"><a href="https://linear.app/mmmmmmmmmmmm/team/MMM/active" target="_blank" rel="noopener" data-detail='Primary landing shows list of issues with status and assignee'>[11]</a></sup></div></div></div><p class="fd-note">Spec promises speed/efficiency; product emphasizes tracking/visibility.</p></div></div><div class="fd" data-status="major_drift"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Per Page</span><span class="fd-st fd-st-major-drift">major drift</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val"><table class="kv"><tr><th>Page</th><th>Primary Element</th><th>User Action</th></tr><tr><td>Project page</td><td>associated issues, progress graphs, and projected completion date ranges</td><td>track project progress</td></tr><tr><td>Initiative overview page</td><td>resources, documents, notes, research, and GTM planning</td><td>manage strategic initiatives</td></tr><tr><td>Roadmaps</td><td>projects across long timelines showing critical path dependencies</td><td>communicate product direction to stakeholders</td></tr></table></div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val"><table class="kv"><tr><th>Page</th><th>Primary Element</th><th>User Action</th></tr><tr><td>Active issues</td><td>Issue list with Todo status</td><td>Review active work</td></tr><tr><td>Projects</td><td>New project button</td><td>Create new project</td></tr><tr><td>Issue detail</td><td>Video player for onboarding</td><td>Learn Linear basics</td></tr></table></div></div></div><p class="fd-note">Completely different pages: spec shows strategic, product shows operational.</p></div></div><div class="fd" data-status="major_drift"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Feature Stack</span><span class="fd-st fd-st-major-drift">major drift</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val"><table class="kv"><tr><th>Feature</th><th>Prominence</th><th>Clicks</th><th>Kano</th></tr><tr><td>Issues</td><td>high</td><td>?</td><td>must-have</td></tr><tr><td>Cycles</td><td>high</td><td>?</td><td>must-have</td></tr><tr><td>Projects</td><td>high</td><td>?</td><td>must-have</td></tr><tr><td>Initiatives</td><td>med</td><td>?</td><td>performance</td></tr><tr><td>Roadmaps</td><td>med</td><td>?</td><td>performance</td></tr><tr><td>AI agents</td><td>med</td><td>?</td><td>delighter</td></tr><tr><td>Linear Asks</td><td>low</td><td>?</td><td>performance</td></tr></table></div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val"><table class="kv"><tr><th>Feature</th><th>Prominence</th><th>Clicks</th><th>Kano</th></tr><tr><td>Issue tracking</td><td>high</td><td>0</td><td>must-have</td></tr><tr><td>Projects</td><td>high</td><td>1</td><td>must-have</td></tr><tr><td>GitHub integration</td><td>medium</td><td>2</td><td>performance</td></tr><tr><td>Import/Export</td><td>low</td><td>3</td><td>performance</td></tr><tr><td>Team management</td><td>medium</td><td>1</td><td>must-have</td></tr></table></div></div></div><p class="fd-note">Product missing Cycles, Roadmaps, AI; shows GitHub instead.</p></div></div><div class="fd" data-status="missing_intended"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Color Semantics</span><span class="fd-st fd-st-missing-intended">not in spec</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val"><span class="empty">&mdash;</span></div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val"><table class="kv"><tr><th>Color</th><th>Meaning</th></tr><tr><td><span class="swatch" style="background:gray"></span> gray</td><td>secondary navigation and inactive states</td></tr><tr><td><span class="swatch" style="background:white"></span> white</td><td>primary content areas and modals</td></tr><tr><td><span class="swatch" style="background:blue"></span> blue</td><td>primary action buttons like Create project</td></tr></table></div></div></div><p class="fd-note">Product documents color usage not mentioned in spec.</p></div></div></div>
+</section>
+<section class="sec" id="workflows">
+  <div class="sec-head" data-section="workflows">
+    <span class="sec-score clr-1">1<span class="sec-score-denom">/4</span></span>
+    <span class="sec-title">Workflows</span>
+    <span class="toggle-icon">+</span>
+  </div>
+  <div class="sec-body"><div class="fd" data-status="major_drift"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Journeys</span><span class="fd-st fd-st-major-drift">major drift</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val"><table class="kv"><tr><th>Journey</th><th>Steps</th><th>Success State</th></tr><tr><td>Issue creation and tracking</td><td>Create issue with title and status → Assign optional properties (priority, estimate, labels, due date, assignee) → Move issue through team-specific workflow statuses → Filter issues into custom views</td><td>Issue completed and moved to Done status</td></tr><tr><td>Cycle planning</td><td>Define cycle parameters (start week, start day, duration) → Add issues to cycle → Track velocity and capacity → Review cycle analytics</td><td>Cycle completed with unfinished issues automatically rolling forward</td></tr><tr><td>Project management</td><td>Create project for specific deliverable → Add issues and milestones → Track progress on project page → Review projected completion dates</td><td>Project completed within projected timeline</td></tr></table></div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val"><table class="kv"><tr><th>Journey</th><th>Steps</th><th>Success State</th></tr><tr><td>View team issues</td><td>Land on active issues page → Scan todo items → Click specific issue</td><td>Issue detail page with actionable information</td></tr><tr><td>Create project</td><td>Click Projects → Click New project → Fill project details → Save project</td><td>New project appears in projects list</td></tr><tr><td>Complete onboarding</td><td>Click onboarding issue → Watch video → Choose setup guide → Follow next steps</td><td>Understanding of Linear's core features</td></tr></table></div></div></div><p class="fd-note">Spec shows power-user workflows; product shows basic interactions.</p></div></div><div class="fd" data-status="missing_intended"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Cog Walkthrough</span><span class="fd-st fd-st-missing-intended">not in spec</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val"><span class="empty">&mdash;</span></div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val"><div class="cw"><div class="cw-h">Step</div><div class="cw-h">Try</div><div class="cw-h">See</div><div class="cw-h">Link</div><div class="cw-h">Progress</div><div>Land on active issues page</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div>Scan todo items</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div>Click specific issue</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div>Click Projects</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div>Click New project</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div>Fill project details</div><div class="cw-friction">Friction</div><div class="cw-pass">Pass</div><div class="cw-friction">Friction</div><div class="cw-pass">Pass</div><div class="cw-reason">Modal shows many unfamiliar fields like Dependencies, Target, Labels without explanation</div><div>Save project</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div>Watch onboarding video</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div class="cw-pass">Pass</div><div>Choose setup guide</div><div class="cw-friction">Friction</div><div class="cw-pass">Pass</div><div class="cw-friction">Friction</div><div class="cw-pass">Pass</div><div class="cw-reason">Company stage options require understanding business context not provided</div></div></div></div></div><p class="fd-note">Product includes detailed cognitive analysis not in spec.</p></div></div><div class="fd" data-status="missing_intended"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Friction Map</span><span class="fd-st fd-st-missing-intended">not in spec</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val"><span class="empty">&mdash;</span></div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val"><table class="kv"><tr><td>Land on active issues page</td><td>zero</td></tr><tr><td>Scan todo items</td><td>zero</td></tr><tr><td>Click specific issue</td><td>zero</td></tr><tr><td>Click Projects</td><td>zero</td></tr><tr><td>Click New project</td><td>zero</td></tr><tr><td>Fill project details</td><td>guided-only</td></tr><tr><td>Save project</td><td>zero</td></tr><tr><td>Watch onboarding video</td><td>zero</td></tr><tr><td>Choose setup guide</td><td>guided-only</td></tr></table></div></div></div><p class="fd-note">Product maps friction levels not mentioned in spec.</p></div></div></div>
+</section>
+<section class="sec" id="onboarding">
+  <div class="sec-head" data-section="onboarding">
+    <span class="sec-score clr-2">2<span class="sec-score-denom">/4</span></span>
+    <span class="sec-title">Onboarding</span>
+    <span class="toggle-icon">+</span>
+  </div>
+  <div class="sec-body"><div class="fd" data-status="missing_intended"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">First Minute</span><span class="fd-st fd-st-missing-intended">not in spec</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val"><span class="empty">&mdash;</span></div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val">User sees a todo list with 4 onboarding tasks and understands this is for managing development work <sup class="cite"><a href="https://linear.app/mmmmmmmmmmmm/team/MMM/active" target="_blank" rel="noopener" data-detail='Todo list shows 4 onboarding tasks like &#39;Get familiar with Linear&#39;'>[14]</a></sup></div></div></div><p class="fd-note">Product describes specific first experience not in spec.</p></div></div><div class="fd" data-status="minor_drift"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Time To Value</span><span class="fd-st fd-st-minor-drift">minor drift</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val">Usable within hours <sup class="cite"><a href="#src-i5" data-detail='Linear is usable within hours; Jira takes weeks to configure'>[5]</a></sup></div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val">Viewing organized list of team issues with clear status indicators</div></div></div><p class="fd-note">Spec gives timeline; product describes immediate value state.</p></div></div><div class="fd" data-status="missing_intended"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Time To Value Clicks</span><span class="fd-st fd-st-missing-intended">not in spec</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val"><span class="empty">&mdash;</span></div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val">0</div></div></div><p class="fd-note">Product measures clicks to value not in spec.</p></div></div><div class="fd" data-status="minor_drift"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Assessment</span><span class="fd-st fd-st-minor-drift">minor drift</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val">Simple first, then powerful — Easy to start, grows with team size <sup class="cite"><a href="#src-i6" data-detail='Simple first, then powerful — Easy to start, grows with team size'>[6]</a></sup></div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val">Structured onboarding through predefined issues, uses developer language, assumes technical context</div></div></div><p class="fd-note">Same philosophy but product emphasizes technical assumptions.</p></div></div></div>
+</section>
+<section class="sec" id="emotional_register">
+  <div class="sec-head" data-section="emotional_register">
+    <span class="sec-score clr-3">3<span class="sec-score-denom">/4</span></span>
+    <span class="sec-title">Emotional Register</span>
+    <span class="toggle-icon">+</span>
+  </div>
+  <div class="sec-body"><div class="fd" data-status="minor_drift"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Primary Emotion</span><span class="fd-st fd-st-minor-drift">minor drift</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val">Confident</div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val">Informed</div></div></div><p class="fd-note">Spec says 'Confident'; product says 'Informed.'</p></div></div><div class="fd" data-status="aligned"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Feels Like</span><span class="fd-st fd-st-aligned">aligned</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val">Fast, minimalist, keyboard-first productivity <sup class="cite"><a href="#src-i7" data-detail='Linear&#39;s UI is famously fast and minimalist. Keyboard-first — nearly every action has a keyboard shortcut'>[7]</a></sup>. Create momentum, don't sprint <sup class="cite"><a href="#src-i8" data-detail='Create momentum, don&#39;t sprint — Work in cycles with healthy cadence, not rushed sprints toward a deadline'>[8]</a></sup></div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val">Like having a specialized dashboard built specifically for software teams — clean issue lists, GitHub integration prominent, technical terminology throughout <sup class="cite"><a href="https://linear.app/mmmmmmmmmmmm/team/MMM/active" target="_blank" rel="noopener" data-detail='Clean interface with GitHub branding and developer-focused terminology'>[16]</a></sup></div></div></div><p class="fd-note">Same fast/minimalist intent; different emphasis on specialization.</p></div></div><div class="fd" data-status="aligned"><div class="fd-head"><span class="toggle-icon">+</span><span class="fd-label">Does Not Feel Like</span><span class="fd-st fd-st-aligned">aligned</span></div><div class="fd-body"><div class="fd-pair"><div class="fd-col fd-int"><p class="fd-col-label">Specification</p><div class="fd-val">Dense nested menus and configuration screens like Jira <sup class="cite"><a href="#src-i9" data-detail='Where Jira has dense nested menus and configuration screens, Linear exposes only what is immediately needed'>[9]</a></sup>. Busy work or tool maintenance <sup class="cite"><a href="#src-i10" data-detail='Say no to busy work — The tool should work for you, not require you to maintain it'>[10]</a></sup></div></div><div class="fd-col fd-imp"><p class="fd-col-label">Reality</p><div class="fd-val">Does not feel like Trello or generic task managers — no visual boards, no simple drag-and-drop, everything structured around development workflows <sup class="cite"><a href="https://linear.app/mmmmmmmmmmmm/projects/all" target="_blank" rel="noopener" data-detail='No visual project boards or simple task management metaphors'>[17]</a></sup></div></div></div><p class="fd-note">Same anti-complexity intent; different comparison tools.</p></div></div></div>
+</section>
+
+
+<div class="sources">
+  <div class="src-block"><p class="src-heading">Specification sources</p><ul class="src-list"><li id="src-i1"><span class="src-num">1</span> Linear is a project management and issue tracking platform built specifically for software product teams</li><li id="src-i2"><span class="src-num">2</span> Engineering teams at software companies — from startups to mid-size tech organizations. Built with developers and PMs in mind, not operations, HR, or marketing teams</li><li id="src-i3"><span class="src-num">3</span> Teams that need speed, clarity, and reduced process overhead</li><li id="src-i4"><span class="src-num">4</span> Teams that need speed, clarity, and reduced process overhead</li><li id="src-i5"><span class="src-num">5</span> Linear is usable within hours; Jira takes weeks to configure</li><li id="src-i6"><span class="src-num">6</span> Simple first, then powerful — Easy to start, grows with team size</li><li id="src-i7"><span class="src-num">7</span> Linear's UI is famously fast and minimalist. Keyboard-first — nearly every action has a keyboard shortcut</li><li id="src-i8"><span class="src-num">8</span> Create momentum, don't sprint — Work in cycles with healthy cadence, not rushed sprints toward a deadline</li><li id="src-i9"><span class="src-num">9</span> Where Jira has dense nested menus and configuration screens, Linear exposes only what is immediately needed</li><li id="src-i10"><span class="src-num">10</span> Say no to busy work — The tool should work for you, not require you to maintain it</li></ul></div><div class="src-block"><p class="src-heading">Reality sources</p><ul class="src-list"><li id="src-m1"><span class="cite src-cite"><a href="https://linear.app/mmmmmmmmmmmm/team/MMM/active" target="_blank" rel="noopener" data-thumb='screenshots/001_Mmmmmmmmmmmm___Active_issues.png'>▣ 1</a></span> Page title shows 'Active issues' as primary view</li><li id="src-m2"><span class="cite src-cite"><a href="https://linear.app/mmmmmmmmmmmm/team/MMM/active" target="_blank" rel="noopener" data-detail='https://linear.app/mmmmmmmmmmmm/team/MMM/active'>2</a></span> Navigation includes specialized sections like 'Backlog' and 'My issues'</li><li id="src-m3"><span class="cite src-cite"><a href="https://linear.app/mmmmmmmmmmmm/team/MMM/active" target="_blank" rel="noopener" data-detail='https://linear.app/mmmmmmmmmmmm/team/MMM/active'>3</a></span> Site consistently refers to 'issues' and 'projects' rather than generic tasks</li><li id="src-m4"><span class="cite src-cite"><a href="https://linear.app/mmmmmmmmmmmm/projects/all" target="_blank" rel="noopener" data-detail='https://linear.app/mmmmmmmmmmmm/projects/all'>4</a></span> Projects section prominently featured in main navigation</li><li id="src-m5"><span class="cite src-cite"><a href="https://linear.app/mmmmmmmmmmmm/settings/integrations/github" target="_blank" rel="noopener" data-detail='https://linear.app/mmmmmmmmmmmm/settings/integrations/github'>5</a></span> GitHub integration appears in multiple contexts including settings</li><li id="src-m6"><span class="cite src-cite"><a href="https://linear.app/mmmmmmmmmmmm/team/MMM/backlog" target="_blank" rel="noopener" data-detail='https://linear.app/mmmmmmmmmmmm/team/MMM/backlog'>6</a></span> Active issues and Backlog views use software development terminology</li><li id="src-m7"><span class="cite src-cite"><a href="https://linear.app/mmmmmmmmmmmm/team/MMM/active" target="_blank" rel="noopener" data-detail='https://linear.app/mmmmmmmmmmmm/team/MMM/active'>7</a></span> No documentation or wiki features visible in main interface</li><li id="src-m8"><span class="cite src-cite"><a href="https://linear.app/mmmmmmmmmmmm/team/MMM/active" target="_blank" rel="noopener" data-detail='https://linear.app/mmmmmmmmmmmm/team/MMM/active'>8</a></span> Interface focused on issue tracking without communication features</li><li id="src-m9"><span class="cite src-cite"><a href="https://linear.app/mmmmmmmmmmmm/settings/import-export" target="_blank" rel="noopener" data-detail='https://linear.app/mmmmmmmmmmmm/settings/import-export'>9</a></span> Technical terms like 'API', 'integrations', 'repositories' used throughout</li><li id="src-m10"><span class="cite src-cite"><a href="https://linear.app/mmmmmmmmmmmm/team/MMM/active" target="_blank" rel="noopener" data-detail='https://linear.app/mmmmmmmmmmmm/team/MMM/active'>10</a></span> Assumes understanding of concepts like backlog management and issue lifecycle</li><li id="src-m11"><span class="cite src-cite"><a href="https://linear.app/mmmmmmmmmmmm/team/MMM/active" target="_blank" rel="noopener" data-detail='https://linear.app/mmmmmmmmmmmm/team/MMM/active'>11</a></span> Primary landing shows list of issues with status and assignee</li><li id="src-m12"><span class="cite src-cite"><a href="https://linear.app/mmmmmmmmmmmm/projects/all" target="_blank" rel="noopener" data-thumb='screenshots/002_Projects.png'>▣ 12</a></span> New project modal shows multiple advanced configuration options</li><li id="src-m13"><span class="cite src-cite"><a href="https://linear.app/mmmmmmmmmmmm/projects/all" target="_blank" rel="noopener" data-detail='https://linear.app/mmmmmmmmmmmm/projects/all'>13</a></span> Project creation includes fields like Dependencies, Target, Labels without context</li><li id="src-m14"><span class="cite src-cite"><a href="https://linear.app/mmmmmmmmmmmm/team/MMM/active" target="_blank" rel="noopener" data-detail='https://linear.app/mmmmmmmmmmmm/team/MMM/active'>14</a></span> Todo list shows 4 onboarding tasks like 'Get familiar with Linear'</li><li id="src-m15"><span class="cite src-cite"><a href="https://linear.app/mmmmmmmmmmmm/issue/MMM-1/get-familiar-with-linear" target="_blank" rel="noopener" data-thumb='screenshots/003_MMM-1_Get_familiar_with_Linear.png'>▣ 15</a></span> Onboarding content assumes user has already decided to use Linear</li><li id="src-m16"><span class="cite src-cite"><a href="https://linear.app/mmmmmmmmmmmm/team/MMM/active" target="_blank" rel="noopener" data-detail='https://linear.app/mmmmmmmmmmmm/team/MMM/active'>16</a></span> Clean interface with GitHub branding and developer-focused terminology</li><li id="src-m17"><span class="cite src-cite"><a href="https://linear.app/mmmmmmmmmmmm/projects/all" target="_blank" rel="noopener" data-detail='https://linear.app/mmmmmmmmmmmm/projects/all'>17</a></span> No visual project boards or simple task management metaphors</li><li id="src-m18"><span class="cite src-cite"><a href="https://linear.app/mmmmmmmmmmmm/team/MMM/active" target="_blank" rel="noopener" data-detail='https://linear.app/mmmmmmmmmmmm/team/MMM/active'>18</a></span> Extensive use of software development jargon throughout interface</li></ul></div>
+</div>
+
+<p class="ftr">Akashic v0 &mdash; spec alignment from blind navigation</p>
+
+<script>
+(function() {
+  // Section toggle
+  document.querySelectorAll('.sec-head').forEach(function(h) {
+    h.addEventListener('click', function() {
+      var sec = h.closest('.sec');
+      sec.classList.toggle('open');
+      var icon = h.querySelector('.toggle-icon');
+      if (icon) icon.textContent = sec.classList.contains('open') ? '−' : '+';
+    });
+  });
+  // Field toggle
+  document.querySelectorAll('.fd-head').forEach(function(h) {
+    h.addEventListener('click', function() {
+      var fd = h.closest('.fd');
+      fd.classList.toggle('open');
+      var icon = h.querySelector('.toggle-icon');
+      if (icon) icon.textContent = fd.classList.contains('open') ? '−' : '+';
+    });
+  });
+  // Citation popovers
+  var popup = null, overlay = null;
+  var isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  function clamp(a) {
+    if (!popup) return;
+    popup.classList.remove('below');
+    popup.style.left = '';
+    popup.style.transform = '';
+    var r = popup.getBoundingClientRect();
+    if (r.top < 0) popup.classList.add('below');
+    var r2 = popup.getBoundingClientRect();
+    if (r2.left < 8) {
+      popup.style.left = '0';
+      popup.style.transform = 'translateX(' + (8 - r2.left) + 'px)';
+      popup.style.setProperty('--arrow-left', (a.getBoundingClientRect().left - popup.getBoundingClientRect().left + a.offsetWidth/2) + 'px');
+    } else if (r2.right > window.innerWidth - 8) {
+      var sh = r2.right - window.innerWidth + 8;
+      popup.style.left = '0';
+      popup.style.transform = 'translateX(-' + (r2.width/2 + sh) + 'px)';
+      popup.style.setProperty('--arrow-left', (a.getBoundingClientRect().left - popup.getBoundingClientRect().left + a.offsetWidth/2) + 'px');
+    }
+    popup.style.opacity = '1';
+  }
+  function show(a) {
+    hide();
+    var detail = a.getAttribute('data-detail');
+    var thumb = a.getAttribute('data-thumb');
+    if (!detail && !thumb) return;
+    popup = document.createElement('span');
+    popup.className = 'cite-popup';
+    popup.style.opacity = '0';
+    if (detail) popup.textContent = detail;
+    if (thumb) {
+      var img = document.createElement('img');
+      img.src = thumb;
+      img.alt = 'Screenshot';
+      if (!isTouch) img.onload = function() { clamp(a); };
+      popup.appendChild(img);
+    }
+    a.closest('.cite').appendChild(popup);
+    if (isTouch) {
+      overlay = document.createElement('div');
+      overlay.className = 'cite-overlay';
+      overlay.addEventListener('click', hide);
+      document.body.appendChild(overlay);
+      popup.style.opacity = '1';
+    } else { clamp(a); }
+  }
+  function hide() {
+    if (overlay) { overlay.remove(); overlay = null; }
+    if (popup) { popup.remove(); popup = null; }
+  }
+  document.addEventListener('pointerenter', function(e) {
+    if (isTouch) return;
+    var a = e.target.closest('.cite a');
+    if (a) show(a);
+  }, true);
+  document.addEventListener('pointerleave', function(e) {
+    if (isTouch) return;
+    if (e.target.closest('.cite a')) hide();
+  }, true);
+  document.addEventListener('click', function(e) {
+    if (!isTouch) return;
+    var a = e.target.closest('.cite a');
+    if (a) {
+      e.preventDefault();
+      var c = a.closest('.cite');
+      if (popup && popup.parentElement === c) { hide(); } else { show(a); }
+    }
+  }, true);
+})();
+</script>
+</body>
+</html>
