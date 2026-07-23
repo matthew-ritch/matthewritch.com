@@ -1,6 +1,6 @@
 ---
 layout: post  
-title: "Markov games, Backward Induction, Nash Equilibria, Blackbox Search, and Robot Baseball"
+title: "Robot Baseball"
 date: 2026-07-22 17:00:00 -0400  
 categories: blog  
 tags: [game theory, probability, puzzles]
@@ -20,15 +20,15 @@ This post is my write-up of the math I learned while solving it, so if you haven
 
 In brief, Robot Baseball is a [Markov game](https://en.wikipedia.org/wiki/Stochastic_game). Its states are numbers of balls and strikes. The game ends when balls=4 or strikes=3. To find the [Nash equilibria](https://en.wikipedia.org/wiki/Nash_equilibrium) at each state, we need to first model the terminal states and then use backward induction to solve each [subgame equilibrium](https://en.wikipedia.org/wiki/Subgame_perfect_equilibrium) until we have found an equilibrium for each possible state. 
 
-The trick is that if the pitcher throws a strike and the batter swings, the batter hits with probability $$p$$ and misses with probability $$1 - p$$. Also, we want to optimize $$p$$ to maximize our odds of reaching (balls=3, strikes=2), so we need to keep it free during our analysis. The players' payoffs at each step are therefore functions of $$p$$, which needs to be accounted for while calculating the equilibrium. This is straightforward symbolically when we are calculating the equilibrium for (balls=3, strikes=2), but that probability needs to be accounted for in each step back during induction, so a symbolic expression for the equilibrium probabilities at the initial state would be an ungodly hard-to-compute-precisely large polynomial of $$p$$.
+The trick is that if the pitcher throws a strike and the batter swings, the batter hits with probability $$p$$ and misses with probability $$1 - p$$. Also, we want to optimize $$p$$ to maximize our odds of reaching $$(\text{balls}=3, \text{strikes}=2)$$, so we need to keep it free during our analysis. The players' payoffs at each step are therefore functions of $$p$$, which needs to be accounted for while calculating the equilibrium. This is straightforward symbolically when we are calculating the equilibrium for $$(\text{balls}=3, \text{strikes}=2)$$, but that probability needs to be accounted for in each step back during induction, so a symbolic expression for the equilibrium probabilities at the initial state would be an ungodly hard-to-compute-precisely large polynomial of $$p$$.
 
 The key to the solution is to realize that 
 
 1) For a given $$p$$, the equilibria for the full game can be computed very quickly 
 
-2) Pr(balls=3, strikes=2) when viewed as a function of $$p$$ has a single maximum value
+2) $$\Pr(\text{balls}=3, \text{strikes}=2)$$ when viewed as a function of $$p$$ has a single maximum value
 
-These two things mean that we can use a black box search algorithm like golden section search to compute the $$p$$ that maximizes Pr(balls=3, strikes=2) to arbitrary precision.
+These two things mean that we can use a black box search algorithm like golden section search to compute the $$p$$ that maximizes $$\Pr(\text{balls}=3, \text{strikes}=2)$$ to arbitrary precision.
 
 Now, let's go through the derivations and solution in detail.
 
@@ -109,17 +109,17 @@ We can record this setup for the game in a payoff matrix.
 
 Now, we want to model the expected payoffs for each player across the set of strategies they can choose to identify their optimal strategies. 
 
-For shorthand, we'll use $$E[L]$$ for Player 1's expected score if Player 2 chooses Left and $$E[R]$$ for Player 1's expected score if Player 2 chooses Right.
+For shorthand, we'll use $$\operatorname{E}[L]$$ for Player 1's expected score if Player 2 chooses Left and $$\operatorname{E}[R]$$ for Player 1's expected score if Player 2 chooses Right.
 
 $$
-E[L] = pa + (1-p)c = c + (a-c)p
+\operatorname{E}[L] = pa + (1-p)c = c + (a-c)p
 $$
 
 $$
-E[R] = pb + (1-p)d = d + (b-d)p
+\operatorname{E}[R] = pb + (1-p)d = d + (b-d)p
 $$
 
-If Player 1 picks $$p$$ so that E[L]>E[R], Player 2 could win more by picking Right, and vice versa. To maximize their score against any opponent, including one that knows their strategy, Player 1 wants to maximize $$min(E[L], E[R])$$. 
+If Player 1 picks $$p$$ so that $$\operatorname{E}[L] > \operatorname{E}[R]$$, Player 2 could win more by picking Right, and vice versa. To maximize their score against any opponent, including one that knows their strategy, Player 1 wants to maximize $$\min(\operatorname{E}[L], \operatorname{E}[R])$$. 
 
 We can graph both expectations as functions of $$p$$:
 
@@ -194,11 +194,11 @@ We can graph both expectations as functions of $$p$$:
 
 
 
-$$min(E[L], E[R])$$ is concave, so it will have some maximum within $$[0,1]$$. If that max $$\in\{0, 1\}$$, then Player 1 will just always pick one of their options because it will always be better.
+$$\min(\operatorname{E}[L], \operatorname{E}[R])$$ is concave, so it will have some maximum within $$[0,1]$$. If that max $$\in\{0, 1\}$$, then Player 1 will just always pick one of their options because it will always be better.
 
-Otherwise, that  $$max(min(E[L], E[R]))$$ will occur at the intersection of $$E[L] = E[R]$$. Therefore, Player 1 selects $$p$$ to meet that condition:
+Otherwise, that  $$\max(\min(\operatorname{E}[L], \operatorname{E}[R]))$$ will occur at the intersection of $$\operatorname{E}[L] = \operatorname{E}[R]$$. Therefore, Player 1 selects $$p$$ to meet that condition:
 
-$$E[L] = E[R]$$
+$$\operatorname{E}[L] = \operatorname{E}[R]$$
 
 $$c + (a-c)p = d + (b-d)p $$
 
@@ -256,7 +256,7 @@ Let's simplify our notation a bit by substituting $$X=V(b+1,s)$$ and $$Y=V(b,s+1
 
 Let's find the Nash equilibrium for this state of the game.
 
-$$V(b,s) = E[Wait] = E[Swing]$$
+$$V(b,s) = \operatorname{E}[\text{Wait}] = \operatorname{E}[\text{Swing}]$$
 
 $$qX + (1-q)Y = qY + (1-q)[4p + (1-p)Y]$$
 
@@ -268,7 +268,7 @@ and we can see by the symmetry of the payoff matrix that $$r = q$$.
 
 So, we can find a general form for $$V(b,s)$$:
 
-$$V(b,s) = E[Wait]$$
+$$V(b,s) = \operatorname{E}[\text{Wait}]$$
 
 $$ = qX + (1-q)Y $$
 
