@@ -19,6 +19,8 @@ excerpt: Learn some easy steps to harden your web server's security.
 * TOC
 {:toc}
 
+*This is Part 3 of the Web Dev for Dirtbags series. Start with [Part 1: Basics and Static Sites]({% post_url 2025-08-27-WDD-Static %}) and [Part 2: Deploying a Django + React Web App]({% post_url 2025-09-02-WDD-Django-React %}).*
+
 ## Purpose: security
 
 You should take a few simple steps to harden your web server's security. In this guide, I will show you how to:

@@ -10,10 +10,14 @@ author: Matthew Ritch
 plugins:
   - jekyll-sitemap
   - jekyll-toc
+  - jekyll-feed
 exclude:
   - Gemfile
   - Gemfile.lock
   - node_modules
   - vendor/bundle
   - blogideas.txt
+  - notes.txt
+  - README.md
+  - context
   

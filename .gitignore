@@ -6,3 +6,4 @@ Gemfile
 Gemfile.lock
 _site/*
 notes.txt
+context/

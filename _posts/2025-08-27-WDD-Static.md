@@ -10,6 +10,8 @@ excerpt: Learn to host a static webpage under your own domain name on your own s
 * TOC
 {:toc}
 
+*Part 1 of Web Dev for Dirtbags. Next up: [Part 2: Deploying a Django + React Web App]({% post_url 2025-09-02-WDD-Django-React %}) and [Part 3: VPS Security]({% post_url 2025-09-03-WDD-VPS-Security %}).*
+
 ## Purpose: hosting a static webpage
 
 1. Learn to host a static webpage under your own domain name on your own server

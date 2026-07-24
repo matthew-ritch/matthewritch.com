@@ -4,7 +4,7 @@ title: "Hybrid dApps Part 1: Implementing Sign-In with Ethereum in Django"
 date: 2025-10-04 17:00:00 -0400  
 categories: blog  
 tags: [web development, ethereum, evm, siwe, django]
-excerpt: Learn how and why to implement SIWE in Django.
+excerpt: Learn how to implement Sign-In with Ethereum (SIWE) authentication in Django with a custom user model, verification logic, an authentication backend, and login views.
 ---
 
 
@@ -503,3 +503,5 @@ Testing your SIWE implementation is essential for maintaining security. To get s
 ## Conclusion
 
 Rig up your frontend to use these login views and you will be off to the races with your hybrid dApp. Your users will be able to log in with Ethereum and use your app without breaking their decentralized flow, but you will still be able to track user info with a performant and scalable centralized database.
+
+When you're ready to put your hybrid dApp on the internet, my [Web Dev for Dirtbags series]({% post_url 2025-09-02-WDD-Django-React %}) covers deploying a Django + React app on your own server, and [Part 3]({% post_url 2025-09-03-WDD-VPS-Security %}) covers hardening that server.

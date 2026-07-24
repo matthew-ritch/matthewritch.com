@@ -2,16 +2,22 @@
 permalink: /fun/
 ---
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
   <meta charset="utf-8">
-  <title>Matthew Ritch – Fun</title>
+  <title>Fun | Matthew Ritch</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="cf-2fa-verify" content="0fab03255b86805">
-  <meta name="description" content="This is the website of Matthew Ritch.">
-  <meta property="og:title" content="Matthew Ritch">
-  <meta property="twitter:title" content="Matthew Ritch">
+  <meta name="description"
+    content="Interactive browser toys by Matthew Ritch. Camera filters, audio-reactive visuals, and simulations of branching growth, slime mold, and lightning.">
+  <link rel="canonical" href="{{ page.url | absolute_url }}">
+  <meta property="og:title" content="Fun | Matthew Ritch">
+  <meta property="og:description"
+    content="Interactive browser toys. Camera filters, audio-reactive visuals, and simulations of branching growth, slime mold, and lightning.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="{{ page.url | absolute_url }}">
+  <meta property="twitter:title" content="Fun | Matthew Ritch">
   <meta property="twitter:card" content="summary">
   <link rel="shortcut icon" type="image/x-icon" href="https://avatars.githubusercontent.com/u/50339375?v=4">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -47,6 +53,13 @@ permalink: /fun/
     .embed-wrap.ratio-ravis {
       aspect-ratio: 480 / 430;
     }
+
+    .embed-desc {
+      max-width: 480px;
+      margin: 0.25em 0 0.5em;
+      font-size: 0.85em;
+      text-align: center;
+    }
   </style>
 </head>
 
@@ -66,20 +79,26 @@ permalink: /fun/
         <div class="flex flex-col md:flex-row md:flex-wrap w-full p-4 justify-center gap-4">
           <div class="flex flex-col items-center">
             <a href="/pages/ravis">Ravis — camera filters</a>
+            <p class="embed-desc">Live camera filters that warp your webcam feed in the browser.</p>
             <div class="embed-wrap ratio-ravis">
-              <iframe src="/pages/ravis" scrolling="no" allow="camera; picture-in-picture" allowfullscreen></iframe>
+              <iframe src="/pages/ravis" scrolling="no" allow="camera; picture-in-picture" allowfullscreen
+                title="Ravis camera filters demo"></iframe>
             </div>
           </div>
           <div class="flex flex-col items-center">
             <a href="/pages/spectral1">Spectral Distort — audio-reactive camera</a>
+            <p class="embed-desc">Live camera effects driven by your microphone.</p>
             <div class="embed-wrap ratio-ravis">
-              <iframe src="/pages/spectral1" scrolling="no" allow="camera; microphone; picture-in-picture" allowfullscreen></iframe>
+              <iframe src="/pages/spectral1" scrolling="no" allow="camera; microphone; picture-in-picture" allowfullscreen
+                title="Spectral Distort audio-reactive camera demo"></iframe>
             </div>
           </div>
           <div class="flex flex-col items-center">
             <a href="/pages/mixer">RGB Mix — camera mixer</a>
+            <p class="embed-desc">Split and remix your camera's color channels.</p>
             <div class="embed-wrap" style="aspect-ratio: 480 / 700;">
-              <iframe src="/pages/mixer" scrolling="no" allow="camera; picture-in-picture" allowfullscreen></iframe>
+              <iframe src="/pages/mixer" scrolling="no" allow="camera; picture-in-picture" allowfullscreen
+                title="RGB Mix camera mixer demo"></iframe>
             </div>
           </div>
         </div>
@@ -89,20 +108,26 @@ permalink: /fun/
         <div class="flex flex-col md:flex-row md:flex-wrap w-full p-4 justify-center gap-4">
           <div class="flex flex-col items-center">
             <a href="/fun/lichtenberg/">Branching growth</a>
+            <p class="embed-desc">Click me! A Lichtenberg figure simulation with reactive branching  patterns.</p>
             <div class="embed-wrap ratio-16-9">
-              <iframe src="/fun/lichtenberg/" scrolling="no" allowfullscreen></iframe>
+              <iframe src="/fun/lichtenberg/" scrolling="no" allowfullscreen
+                title="Branching growth simulation"></iframe>
             </div>
           </div>
           <div class="flex flex-col items-center">
             <a href="/fun/lichtenberg2/">Slime mold-like growth</a>
+            <p class="embed-desc">Click me! An organic growth simulation that spreads like slime mold networks.</p>
             <div class="embed-wrap ratio-16-9">
-              <iframe src="/fun/lichtenberg2/" scrolling="no" allowfullscreen></iframe>
+              <iframe src="/fun/lichtenberg2/" scrolling="no" allowfullscreen
+                title="Slime mold-like growth simulation"></iframe>
             </div>
           </div>
           <div class="flex flex-col items-center">
             <a href="/fun/lichtenberg3/">Lightning</a>
+            <p class="embed-desc">Click me! Simulated lightning strikes: fast, discharge paths rendered on a dark sky.</p>
             <div class="embed-wrap ratio-16-9">
-              <iframe src="/fun/lichtenberg3/" scrolling="no" allowfullscreen></iframe>
+              <iframe src="/fun/lichtenberg3/" scrolling="no" allowfullscreen
+                title="Lightning simulation"></iframe>
             </div>
           </div>
         </div>

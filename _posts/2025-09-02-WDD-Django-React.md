@@ -10,6 +10,8 @@ excerpt: Learn to host a React + Django web app under your own domain name on yo
 * TOC
 {:toc}
 
+*Part 2 of the Web Dev for Dirtbags series. Start with [Part 1: Basics and Static Sites]({% post_url 2025-08-27-WDD-Static %}). Next, lock things down with [Part 3: VPS Security]({% post_url 2025-09-03-WDD-VPS-Security %}).*
+
 ## Purpose: hosting a dynamic app
 
 We are going to get you off of localhost.

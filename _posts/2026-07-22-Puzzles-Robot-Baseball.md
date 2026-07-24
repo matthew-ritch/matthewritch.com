@@ -1,10 +1,11 @@
 ---
 layout: post  
-title: "Robot Baseball"
+title: "Solving Jane Street's Robot Baseball Puzzle: Markov Games and Golden Section Search"
 date: 2026-07-22 17:00:00 -0400  
 categories: blog  
 tags: [game theory, probability, puzzles]
-excerpt: Learn how to model Markov games and when to switch to numerical methods.
+excerpt: Solving Jane Street's Robot Baseball puzzle with Markov game analysis and golden section search, an enjoyable mix of symbolic math and numerical methods.
+image: /images/puz2_R.png
 ---
 
 
@@ -14,15 +15,13 @@ excerpt: Learn how to model Markov games and when to switch to numerical methods
 
 
 
-Recently, I have been enjoying solving Jane Street's backlog of [puzzles](https://www.janestreet.com/puzzles). Last night, I solved [Robot Baseball](https://www.janestreet.com/puzzles/robot-baseball-index/) from October 2025.
-
-This post is my write-up of the math I learned while solving it, so if you haven't already, take a second to read the puzzle!
+Recently, I have been enjoying solving Jane Street's backlog of [puzzles](https://www.janestreet.com/puzzles). Last night, I solved [Robot Baseball](https://www.janestreet.com/puzzles/robot-baseball-index/) from October 2025. This post is my write-up of the math I learned while solving it, so if you haven't already, take a second to read the puzzle!
 
 In brief, Robot Baseball is a [Markov game](https://en.wikipedia.org/wiki/Stochastic_game). Its states are numbers of balls and strikes. The game ends when balls=4 or strikes=3. To find the [Nash equilibria](https://en.wikipedia.org/wiki/Nash_equilibrium) at each state, we need to first model the terminal states and then use backward induction to solve each [subgame equilibrium](https://en.wikipedia.org/wiki/Subgame_perfect_equilibrium) until we have found an equilibrium for each possible state. 
 
-The trick is that if the pitcher throws a strike and the batter swings, the batter hits with probability $$p$$ and misses with probability $$1 - p$$. Also, we want to optimize $$p$$ to maximize our odds of reaching $$(\text{balls}=3, \text{strikes}=2)$$, so we need to keep it free during our analysis. The players' payoffs at each step are therefore functions of $$p$$, which needs to be accounted for while calculating the equilibrium. This is straightforward symbolically when we are calculating the equilibrium for $$(\text{balls}=3, \text{strikes}=2)$$, but that probability needs to be accounted for in each step back during induction, so a symbolic expression for the equilibrium probabilities at the initial state would be an ungodly hard-to-compute-precisely large polynomial of $$p$$.
+The catch is that if the pitcher throws a strike and the batter swings, the batter hits with probability $$p$$ and misses with probability $$1 - p$$. We want to optimize $$p$$ to maximize our odds of reaching $$(\text{balls}=3, \text{strikes}=2)$$. The players' payoffs at each step and their equilibrium strategies are therefore functions of $$p$$. This is straightforward symbolically when we are calculating the equilibrium for $$(\text{balls}=3, \text{strikes}=2)$$, but over the many inductive steps back to the initial state of the game, those symbolic expressions blow up into an ungodly hard-to-compute-precisely large polynomials of $$p$$.
 
-The key to the solution is to realize that 
+The key is to realize that 
 
 1) For a given $$p$$, the equilibria for the full game can be computed very quickly 
 
@@ -125,10 +124,10 @@ We can graph both expectations as functions of $$p$$:
 
 <figure class="rb-fig">
   <svg viewBox="0 0 640 420" role="img" aria-labelledby="rb-title rb-desc" xmlns="http://www.w3.org/2000/svg">
-    <title id="rb-title">Player 1's payoff versus the mixing probability p</title>
+    <title id="rb-title">Player 1's payoff versus p</title>
     <desc id="rb-desc">Two straight lines, E[L] and E[R], plotted against p. E[L] rises and E[R] falls, crossing at p-star. The lower of the two lines forms a tent shape whose peak, at the crossing, is the highest payoff Player 1 can guarantee.</desc>
 
-    <!-- shaded region under the lower envelope (the guaranteed payoff) -->
+    <!-- < min(E[L], E[R]) -->
     <polygon points="56,315 352.4,178.2 550,201 550,372 56,372" fill="var(--rb-tent)"/>
 
     <!-- axes -->
@@ -139,11 +138,11 @@ We can graph both expectations as functions of $$p$$:
     <path d="M352.4 178.2 L352.4 372" stroke="var(--rb-muted)" stroke-width="1" stroke-dasharray="4 4"/>
     <path d="M352.4 178.2 L56 178.2" stroke="var(--rb-muted)" stroke-width="1" stroke-dasharray="4 4"/>
 
-    <!-- the parts Player 2 won't let Player 1 reach (faded) -->
+    <!-- max(E[L], E[R]) -->
     <path d="M352.4 178.2 L550 87" stroke="var(--rb-s1)" stroke-width="2" stroke-opacity="0.3" fill="none"/>
     <path d="M56 144 L352.4 178.2" stroke="var(--rb-s2)" stroke-width="2" stroke-opacity="0.3" fill="none"/>
 
-    <!-- the binding (lower) portions = the tent Player 1 actually lives on -->
+    <!-- min(E[L], E[R]) -->
     <path d="M56 315 L352.4 178.2" stroke="var(--rb-s1)" stroke-width="2.5" fill="none"/>
     <path d="M352.4 178.2 L550 201" stroke="var(--rb-s2)" stroke-width="2.5" fill="none"/>
 
@@ -151,7 +150,7 @@ We can graph both expectations as functions of $$p$$:
     <path d="M352.4 70 L352.4 170" stroke="var(--rb-muted)" stroke-width="1" stroke-dasharray="3 3"/>
     <circle cx="352.4" cy="178.2" r="5" fill="var(--rb-ink)" stroke="var(--rb-surface)" stroke-width="2"/>
 
-    <!-- direct series labels -->
+    <!-- series labels -->
     <text x="556" y="90" fill="var(--rb-s1)" font-size="14" font-weight="600">E[L]</text>
     <text x="556" y="205" fill="var(--rb-s2)" font-size="14" font-weight="600">E[R]</text>
 
@@ -168,7 +167,7 @@ We can graph both expectations as functions of $$p$$:
     <text x="48"  y="376" fill="var(--rb-muted)" font-size="11" text-anchor="end">0</text>
 
     <!-- axis titles -->
-    <text x="303" y="410" fill="var(--rb-sec)" font-size="12" text-anchor="middle">p  =  Player 1's probability of playing Top</text>
+    <text x="303" y="410" fill="var(--rb-sec)" font-size="12" text-anchor="middle">p</text>
     <text x="18" y="201" fill="var(--rb-sec)" font-size="12" text-anchor="middle" transform="rotate(-90 18 201)">Player 1's expected payoff</text>
   </svg>
 </figure>
@@ -304,13 +303,13 @@ $$ = q^2 R(b+1,s) + [1-q^2 - p(1-q)^2]R(b,s+1)$$
 
 I've skipped it here to simplify notation, but remember that $$q$$ is itself a function of $$(b,s)$$. So, we have another recurrence relation that we can combine with our recurrence relation for $$V(b,s)$$ to calculate $$R(0,0)$$. $$R(0,0)$$ is another insane rational function of $$p$$, but luckily again, we won't need to use that symbolic form. Given some $$p$$, we can quickly calculate $$R(0,0)$$.
 
-## Visualizing $$V(b,s)$$ and $$R(b,s)$$ as functions of $$p$$
+## Visualizing the Value and Reach Probability as Functions of p
 
 Before we move on to solving, I wanted to show off these curves!
 
-![](/images/puz2_V.png)
+![Plot of the batter's expected value V(b,s) at each ball-strike count as a function of the hit probability p](/images/puz2_V.png)
 
-![](/images/puz2_R.png)
+![Plot of R(b,s), the probability of reaching a full count from each game state, as a function of the hit probability p, showing a single clear maximum for R(0,0)](/images/puz2_R.png)
 
 Look at that clean maximum for $$R(0,0)$$!
 
