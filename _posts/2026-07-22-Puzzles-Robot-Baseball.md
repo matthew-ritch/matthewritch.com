@@ -1,9 +1,9 @@
 ---
 layout: post  
-title: "Solving Jane Street's Robot Baseball Puzzle: Markov Games and Golden Section Search"
+title: "Jane Street's Robot Baseball Puzzle: Markov Games and Golden Section Search"
 date: 2026-07-22 17:00:00 -0400  
 categories: blog  
-tags: [game theory, probability, puzzles]
+tags: [puzzles, game theory, probability, baseball]
 excerpt: Solving Jane Street's Robot Baseball puzzle with Markov game analysis and golden section search, an enjoyable mix of symbolic math and numerical methods.
 image: /images/puz2_R.png
 ---

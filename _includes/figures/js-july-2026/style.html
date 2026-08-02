@@ -1,0 +1,92 @@
+<style>
+.kn-fig {
+  margin: 1.8em auto; max-width: 620px; text-align: center;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --kn-surface: #fcfcfb; --kn-ink: #0b0b0b; --kn-sec: #52514e; --kn-muted: #7a7972;
+  --kn-grid: #e2e1d8; --kn-region: #6f6e69; --kn-faint: #a5a39b;
+  --kn-blue: #2a78d6; --kn-orange: #eb6834;
+  --kn-tower: rgba(42,120,214,0.13); --kn-dead: rgba(137,135,129,0.13);
+}
+.kn-fig.kn-wide { max-width: 720px; }
+.kn-fig svg { width: 100%; height: auto; display: block; }
+.kn-fig .kn-surface { fill: var(--kn-surface); }
+.kn-fig .kn-grid { stroke: var(--kn-grid); stroke-width: 1; fill: none; }
+.kn-fig .kn-region { stroke: var(--kn-region); stroke-width: 3; stroke-linecap: square; fill: none; }
+.kn-fig .kn-tower { fill: var(--kn-tower); }
+.kn-fig .kn-unvisited { fill: var(--kn-dead); }
+.kn-fig .kn-towermark { fill: var(--kn-blue); opacity: 0.55; }
+.kn-fig text { font-variant-numeric: tabular-nums; }
+.kn-fig .kn-axis { fill: var(--kn-muted); font-size: 11px; text-anchor: middle; }
+.kn-fig .kn-axis-y { text-anchor: middle; }
+.kn-fig .kn-move { fill: var(--kn-muted); font-size: 11px; font-weight: 600; }
+.kn-fig .kn-score {
+  fill: var(--kn-faint); text-anchor: middle; font-weight: 500;
+  paint-order: stroke fill; stroke: var(--kn-surface); stroke-width: 3px;
+}
+.kn-fig .kn-hint {
+  fill: var(--kn-sec); text-anchor: middle; font-weight: 600;
+  paint-order: stroke fill; stroke: var(--kn-surface); stroke-width: 3px;
+}
+.kn-fig .kn-clue {
+  fill: var(--kn-ink); text-anchor: middle; font-weight: 700;
+  paint-order: stroke fill; stroke: var(--kn-surface); stroke-width: 3px;
+}
+.kn-fig .kn-path {
+  fill: none; stroke: var(--kn-orange); stroke-width: 2.5;
+  stroke-linejoin: round; stroke-linecap: round; opacity: 0.85;
+}
+.kn-fig .kn-path-faint {
+  fill: none; stroke: var(--kn-orange); stroke-width: 1.5;
+  stroke-linejoin: round; stroke-linecap: round; opacity: 0.30;
+}
+.kn-fig .kn-dot { fill: var(--kn-orange); }
+.seq-wrap { overflow-x: auto; margin: 1.6em 0; }
+.seq-table {
+  border-collapse: collapse; margin: 0 auto; font-size: 0.92em;
+  font-variant-numeric: tabular-nums; line-height: 1.25;
+  --seq-line: #d3d2c8; --seq-head: rgba(137,135,129,0.12); --seq-cell: #fcfcfb;
+  --seq-ink: #1a1a19; --seq-muted: #6f6e69; --seq-dead: #a9a7a0;
+  --seq-hit: rgba(42,120,214,0.13); --seq-kill: rgba(137,135,129,0.10);
+}
+.seq-table th, .seq-table td {
+  border: 1px solid var(--seq-line); padding: 0.42em 0.72em; text-align: center;
+  color: var(--seq-ink);
+}
+.seq-table thead th { background: var(--seq-head); font-weight: 600; }
+.seq-table thead th.sub { font-weight: 500; font-size: 0.85em; color: var(--seq-muted); }
+.seq-table td { background: var(--seq-cell); }
+.seq-table td.op { color: var(--seq-muted); font-size: 0.85em; border-right: none; padding-right: 0.2em; }
+.seq-table td.val { border-left: none; padding-left: 0.2em; }
+.seq-table td.fixed { color: var(--seq-muted); }
+.seq-table td.s6 { font-weight: 700; }
+.seq-table tr.hit td.s6 { background: var(--seq-hit); }
+.seq-table tr.out td, .seq-table tr.out th {
+  color: var(--seq-dead); background: var(--seq-kill);
+  text-decoration: line-through; text-decoration-thickness: 1px;
+}
+.kn-fig .kn-panels { display: flex; flex-wrap: wrap; justify-content: center; gap: 1.2em; }
+.kn-fig .kn-panel { flex: 1 1 190px; max-width: 230px; }
+.kn-fig .kn-panel svg { width: 100%; height: auto; }
+.kn-fig .kn-frame { fill: none; stroke: var(--kn-region); stroke-width: 2; }
+.kn-fig .kn-cluedot { fill: none; stroke: var(--kn-muted); stroke-width: 1.2; }
+.kn-fig .kn-step {
+  fill: var(--kn-ink); font-size: 12px; font-weight: 700; text-anchor: middle;
+  paint-order: stroke fill; stroke: var(--kn-surface); stroke-width: 3px;
+}
+.kn-fig .kn-panel-cap {
+  font-size: 0.8em; color: var(--kn-sec); margin-top: 0.45em;
+  font-variant-numeric: tabular-nums;
+}
+.kn-fig .kn-panel-cap b { color: var(--kn-ink); }
+.kn-controls {
+  display: flex; align-items: center; justify-content: center;
+  gap: 0.6em 1.1em; flex-wrap: wrap; margin-top: 0.9em;
+}
+.kn-slider { flex: 1 1 220px; max-width: 400px; accent-color: var(--kn-orange); }
+.kn-readout {
+  font-size: 0.9em; color: var(--kn-sec); white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.kn-readout b { color: var(--kn-ink); font-weight: 700; }
+.kn-fig .kn-now { fill: none; stroke: var(--kn-orange); stroke-width: 3; }
+</style>

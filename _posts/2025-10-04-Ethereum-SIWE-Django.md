@@ -1,6 +1,6 @@
 ---
 layout: post  
-title: "Hybrid dApps Part 1: Implementing Sign-In with Ethereum in Django"
+title: "Hybrid dApps: Implementing Sign-In with Ethereum in Django"
 date: 2025-10-04 17:00:00 -0400  
 categories: blog  
 tags: [web development, ethereum, evm, siwe, django]
