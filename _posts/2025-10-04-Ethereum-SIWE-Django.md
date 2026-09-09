@@ -3,7 +3,7 @@ layout: post
 title: "Hybrid dApps: Implementing Sign-In with Ethereum in Django"
 date: 2025-10-04 17:00:00 -0400  
 categories: blog  
-tags: [web development, ethereum, evm, siwe, django]
+tags: [web development, django]
 excerpt: Learn how to implement Sign-In with Ethereum (SIWE) authentication in Django with a custom user model, verification logic, an authentication backend, and login views.
 ---
 
@@ -286,7 +286,7 @@ def parse_siwe_message(message_body: str) -> dict:
         version = version_match.group(1).strip()
         chain_id = int(chain_id_match.group(1))
         nonce = nonce_match.group(1).strip()
-        issued_at = datetime.fromisoformat(issued_at_match.group(1).strip())
+        issued_at = datetime.datetime.fromisoformat(issued_at_match.group(1).strip())
 
         return {
             "domain": domain,
@@ -313,7 +313,7 @@ def check_siwe(message, signed_message):
     if not parsed:
         return None
     # Validate timestamp
-    now = datetime.now(parsed["issued_at"].tzinfo)
+    now = datetime.datetime.now(parsed["issued_at"].tzinfo)
     if abs((now - parsed["issued_at"]).total_seconds()) > SIWE_MESSAGE_VALIDITY * 60:
         return None
 

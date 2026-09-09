@@ -6,14 +6,43 @@ description: Personal website of Matthew Ritch.
 
 <div class="pb-32 mx-auto max-w-screen-sm antialiased prose">
     <div class="flex w-full justify-center">
-        <img src="/images/user-image.png"
-            alt="My github profile photo: a warped image of optic nerve tissue" class="topim">
+        <img src="/images/bike.png" width="300" height="300"
+            alt="Riding my bike" class="topim">
     </div>
     <p class="w-full text-center">
-        I am a forward-deployed engineer at <a href="https://www.ancera.com/">Ancera</a>.
+        I am a forward-deployed engineer at <a href="https://www.ancera.com/">Ancera</a>. <br> I am interested in calm solutions for noisy physical processes, like biology at scale.
     </p>
+
+    <style>
+        .home-writing { margin-top: 2.5em; }
+        .home-writing-head {
+            display: flex; align-items: baseline; justify-content: space-between;
+            border-bottom: 1px solid #e5e5e5; padding-bottom: 0.4em; margin-bottom: 1em;
+        }
+        .home-writing-head h2 { font-size: 1.1em; font-weight: 700; margin: 0; }
+        .home-writing-head a { font-size: 0.85em; color: #52514e; }
+        .home-post { margin-bottom: 1.4em; }
+        .home-post-title { font-weight: 600; }
+        .home-post-meta { font-size: 0.8em; color: #6f6e69; margin-top: 0.1em; }
+        .home-post-excerpt { font-size: 0.92em; color: #52514e; margin-top: 0.3em; line-height: 1.45; }
+    </style>
+    <div class="home-writing">
+        <div class="home-writing-head">
+            <h2>Recent writing</h2>
+            <a href="/blog">All posts →</a>
+        </div>
+        {% for post in site.posts limit:3 %}
+        <div class="home-post">
+            <a class="home-post-title" href="{{ post.url | remove: '.html' }}">{{ post.title }}</a>
+            <div class="home-post-meta">{{ post.date | date: "%B %-d, %Y" }}</div>
+            {% if post.excerpt %}
+            <div class="home-post-excerpt">{{ post.excerpt | strip_html | strip_newlines | truncatewords: 30 }}</div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
     <div class="flex w-full justify-center">
-        <img loading="lazy" height="250"
+        <img loading="lazy" width="300" height="300"
             src="https://radar.weather.gov/ridge/standard/KFFC_loop.gif" alt="Atlanta radar loop"
             class="topim mt-0">
     </div>

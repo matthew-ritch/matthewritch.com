@@ -3,7 +3,7 @@ layout: post
 title: "Estimating disease prevalence by fusing pooled and individual testing"
 date: 2026-07-24 10:00:00 -0400
 categories: blog
-tags: [bayesian statistics, probability, epidemiology]
+tags: [probability]
 excerpt: Turning our arXiv paper into an interactive walk-through. Combine pooled and individual disease tests into a single closed-form Bayesian posterior for population prevalence sans MCMC.
 image: /images/fusion-og.png
 ---

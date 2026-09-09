@@ -3,14 +3,15 @@ layout: post
 title: "Jane Street's ‘Pent-Up’ Frustration 3 / Knight Moves 7 Puzzle: Constraint Satisfaction and Backtracking"
 date: 2026-08-01 17:00:00 -0400  
 categories: blog  
-tags: [puzzles, chess, constraint satisfaction problems]
+tags: [puzzles]
 excerpt: Solving Jane Street's ‘Pent-Up’ Frustration 3 / Knight Moves 7 puzzle with backtracking depth-first search.
+image: /images/puzzles-pu3km7.png
 ---
 
 * TOC
 {:toc}
 
-This post will take you through my solution of Jane Street's July 2026 Puzzle, [‘Pent-Up’ Frustration 3 / Knight Moves 7](https://www.janestreet.com/puzzles/current-puzzle/). As always, I recommend you try it out yourself before reading this article!
+This post will take you through my solution of Jane Street's July 2026 Puzzle, [‘Pent-Up’ Frustration 3 / Knight Moves 7](https://www.janestreet.com/puzzles/pent-up-frustration-3-knight-moves-7-index/). As always, I recommend you try it out yourself before reading this article!
 
 This was a fun one that is pretty straightforward once you grasp the rules. This is essentially a constraint satisfaction problem. We can find the solution sequence of knight's moves with some clever backtracking. 
 
@@ -35,7 +36,7 @@ I think a crucial first insight to solving this problem is that the towers' posi
 - Exactly once for each region, occupy a position in that region with $$z=1$$
 - For each move $$i$$, if $$i \in R$$, $$S_i = \operatorname{hint}(x_i, y_i)$$
 
-<!-- was: TODO graphic of the puzzle with score hints and region borders. We need to make our own because we are going to annotate it to illustrate the first few moves -->
+<!-- graphic of the puzzle with score hints and region borders. We need to make our own because we are going to annotate it to illustrate the first few moves -->
 
 {% include figures/js-july-2026/style.html %}
 
@@ -54,26 +55,26 @@ Once I grokked the constraints and movement, I took a few minutes to find which 
 
 Let's look at that path on the board. Our moves are numbered in the top left corner, intermediate scores are shown in faint type, and towers are marked by triangles in the upper right corner.
 
-<!-- was: TODO graphic showing the path so far. -->
+<!-- graphic showing the path so far. -->
 
 {% include figures/js-july-2026/opening.html %} 
 
 Then, only using the possible moves from this position, you can enumerate the possible sequences of scores $$S_1$$ through $$S_6$$.
 
-<!-- was: TODO insert the list of possible scores: -->
+<!-- insert the list of possible scores: -->
 
 {% include figures/js-july-2026/score-sequences.html %}
 
 Which of these sequences have an $$S_6$$ that is in our set of hints?
 
-<!-- was: TODO Show the same list with invalid S_6 values crossed out -->
+<!-- Show the same list with invalid S_6 values crossed out -->
 
 {% include figures/js-july-2026/score-sequences-filtered.html %}
 
 Ok, so there is one option there. $$S_6$$ must be 16.
 Now, what sequence of moves will get us there?
 
-<!-- was: TODO Show the list off possible moves -->
+<!-- Show the list off possible moves -->
 
 {% include figures/js-july-2026/candidates.html %}
 
@@ -91,7 +92,7 @@ The work I showed to get us to move 6 in the last section is a classic applicati
 
 Now, we encode our constraints and apply DFS. One final wrinkle is deciding a value for $$k$$. Remember that after move 18, the knight begins recording its score every $$k$$ moves for some $$k>3$$. That can be solved by picking some $$k$$, running the DFS, and seeing if it creates a constraint-satisfying path. That only works with $$k=7$$.
 
-<!-- was: TODO graphic of final board, with moves numbered in the top left and intermediate scores shown in faint type -->
+<!-- graphic of final board, with moves numbered in the top left and intermediate scores shown in faint type -->
 
 {% include figures/js-july-2026/final-board.html %}
 

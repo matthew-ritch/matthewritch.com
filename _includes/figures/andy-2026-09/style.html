@@ -1,0 +1,330 @@
+<style>
+.aa-fig {
+  margin: 1.8em auto; max-width: 620px; text-align: center;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --aa-ink: #17170f; --aa-tile: #faf8f2; --aa-line: #cbc6b6; --aa-arc: #3f3e37;
+}
+.aa-fig svg { width: 100%; height: auto; display: block; }
+.aa-fig .aa-frame { fill: none; stroke: var(--aa-line); stroke-width: 1.5; }
+.aa-fig .aa-num {
+  fill: var(--aa-ink); font-size: 24px; font-weight: 700; text-anchor: middle;
+  font-variant-numeric: tabular-nums;
+  paint-order: stroke fill; stroke: #e8e3d3; stroke-width: 3.5px;
+}
+.aa-fig .aa-arc {
+  fill: none; stroke: var(--aa-arc); stroke-width: 3.2;
+  stroke-linecap: butt; opacity: 0.9;
+}
+.aa-fig .aa-arc-faint { stroke-width: 2.2; opacity: 0.28; }
+
+/* --- the rotatable truncated tetrahedron --- */
+.aa-solid { max-width: 380px; }
+.aa-solid svg { touch-action: none; cursor: grab; }
+.aa-solid svg:active { cursor: grabbing; }
+.aa-fig .aa-face { stroke: #8d8a7d; stroke-width: 1.1; stroke-linejoin: round; }
+.aa-fig .aa-pin { fill: var(--aa-arc); stroke: #faf8f2; stroke-width: 2; }
+
+/* --- floor and ball, side by side --- */
+.aa-linked { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.6em; }
+.aa-linked > div { flex: 1 1 250px; max-width: 300px; }
+.aa-linked .aa-ball svg { touch-action: none; cursor: grab; }
+.aa-linked .aa-ball svg:active { cursor: grabbing; }
+.aa-linked .aa-floor svg { touch-action: manipulation; }
+.aa-linked .aa-floor polygon[data-h] { cursor: pointer; }
+.aa-fig .aa-step { fill: none; stroke: var(--aa-arc); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
+.aa-fig .aa-open { fill: none; stroke: var(--aa-arc); stroke-width: 2; stroke-dasharray: 3 3; opacity: 0.55; }
+/* until the reader takes a first step, the legal moves beckon */
+@keyframes aa-beckon {
+  0%, 100% { opacity: 0.28; stroke-width: 2; }
+  50%      { opacity: 1; stroke-width: 3.4; }
+}
+.aa-linked.aa-fresh .aa-open { animation: aa-beckon 1.5s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .aa-linked.aa-fresh .aa-open { animation: none; opacity: 0.9; stroke-width: 3; }
+}
+.aa-reset {
+  margin-top: 0.7em; font: inherit; font-size: 1.05em; line-height: 1;
+  color: #52514e; background: #f3f1e8; border: 1px solid var(--aa-line);
+  border-radius: 999px; padding: 0.35em 0.8em; cursor: pointer;
+}
+.aa-reset:hover { background: #e8e5d8; color: var(--aa-ink); }
+.aa-fig .aa-cap { font-size: 0.85em; color: #52514e; margin-top: 0.7em; line-height: 1.45; }
+.aa-fig .aa-cta {
+  margin: 0 0 0.7em; font-size: 1.02em; font-weight: 600; color: #2a78d6;
+}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <marker id="aa-arrow" viewBox="0 0 10 10" refX="8.6" refY="5"
+            markerWidth="5.2" markerHeight="5.2" orient="auto-start-reverse">
+      <path d="M0.4 0.8 L9.4 5 L0.4 9.2 L2.2 5 Z" fill="#3f3e37"/>
+    </marker>
+    <marker id="aa-arrow-faint" viewBox="0 0 10 10" refX="8.6" refY="5"
+            markerWidth="5.2" markerHeight="5.2" orient="auto-start-reverse">
+      <path d="M0.4 0.8 L9.4 5 L0.4 9.2 L2.2 5 Z" fill="#3f3e37" opacity="0.28"/>
+    </marker>
+  </defs>
+</svg>
+
+<script>{% raw %}
+window.AndyTT = (function () {
+  var SVGNS = 'http://www.w3.org/2000/svg';
+  var T = [[1, 1, 1], [1, -1, -1], [-1, 1, -1], [-1, -1, 1]];
+  function trunc(i, j) {  // vertex on edge i->j, one third of the way along
+    return [(2 * T[i][0] + T[j][0]) / 3, (2 * T[i][1] + T[j][1]) / 3, (2 * T[i][2] + T[j][2]) / 3];
+  }
+  function dot(a, b) { return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]; }
+  function sub(a, b) { return [a[0] - b[0], a[1] - b[1], a[2] - b[2]]; }
+  function cross(a, b) {
+    return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+  }
+  function nrm(v) { var l = Math.hypot(v[0], v[1], v[2]); return [v[0] / l, v[1] / l, v[2] / l]; }
+
+  var verts = [], vidx = {};
+  for (var i = 0; i < 4; i++) for (var j = 0; j < 4; j++) if (i !== j) {
+    vidx[i + '-' + j] = verts.length; verts.push(trunc(i, j));
+  }
+  var scale = Math.hypot(verts[0][0], verts[0][1], verts[0][2]);
+  verts = verts.map(function (v) { return [v[0] / scale, v[1] / scale, v[2] / scale]; });
+
+  // faces 0..3: the hexagons, one per tetrahedron face (opposite each corner).
+  // faces 4..7: the triangles, one per truncated corner.
+  var faces = [];
+  for (var k = 0; k < 4; k++) {
+    var o = [0, 1, 2, 3].filter(function (x) { return x !== k; });
+    var a = o[0], b = o[1], c = o[2];
+    faces.push({ kind: 'hex', corner: k, v: [
+      vidx[a + '-' + b], vidx[b + '-' + a], vidx[b + '-' + c],
+      vidx[c + '-' + b], vidx[c + '-' + a], vidx[a + '-' + c]] });
+  }
+  for (var m = 0; m < 4; m++) {
+    var p = [0, 1, 2, 3].filter(function (x) { return x !== m; });
+    faces.push({ kind: 'tri', corner: m, v: [
+      vidx[m + '-' + p[0]], vidx[m + '-' + p[1]], vidx[m + '-' + p[2]]] });
+  }
+  faces.forEach(function (f) {                // wind ccw as seen from outside
+    var ctr = [0, 0, 0];
+    f.v.forEach(function (n) { for (var d = 0; d < 3; d++) ctr[d] += verts[n][d] / f.v.length; });
+    var p0 = verts[f.v[0]], p1 = verts[f.v[1]], p2 = verts[f.v[2]];
+    if (dot(cross(sub(p1, p0), sub(p2, p0)), ctr) < 0) f.v.reverse();
+    f.c = ctr;
+  });
+
+  // the three hexagons neighbouring each hexagon, ccw as seen from outside
+  var hexNbrs = [];
+  for (var h = 0; h < 4; h++) {
+    var ctr = faces[h].c, others = [0, 1, 2, 3].filter(function (x) { return x !== h; });
+    var ref = sub(faces[others[0]].c, ctr);
+    hexNbrs.push(others.slice().sort(function (x, y) {
+      function ang(t) {
+        var v = sub(faces[t].c, ctr);
+        return (Math.atan2(dot(cross(ctr, ref), v), dot(v, ref)) + 2 * Math.PI) % (2 * Math.PI);
+      }
+      return ang(x) - ang(y);
+    }));
+  }
+
+  function mul(A, B) {
+    var C = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
+    for (var r = 0; r < 3; r++) for (var c = 0; c < 3; c++)
+      C[r][c] = A[r][0] * B[0][c] + A[r][1] * B[1][c] + A[r][2] * B[2][c];
+    return C;
+  }
+  function rotX(t) { var s = Math.sin(t), c = Math.cos(t); return [[1, 0, 0], [0, c, -s], [0, s, c]]; }
+  function rotY(t) { var s = Math.sin(t), c = Math.cos(t); return [[c, 0, s], [0, 1, 0], [-s, 0, c]]; }
+
+  // view basis (rows) that puts world direction w toward the camera, keeping
+  // the in-plane spin as close to `up` as possible so turns look continuous
+  function basisTo(w, up) {
+    w = nrm(w);
+    var v = sub(up, [w[0] * dot(up, w), w[1] * dot(up, w), w[2] * dot(up, w)]);
+    if (Math.hypot(v[0], v[1], v[2]) < 1e-6) v = Math.abs(w[0]) < 0.9 ? [1, 0, 0] : [0, 1, 0];
+    v = nrm(v);
+    return [cross(v, w), v, w];
+  }
+
+  function mat2quat(m) {
+    var t = m[0][0] + m[1][1] + m[2][2], s;
+    if (t > 0) {
+      s = Math.sqrt(t + 1) * 2;
+      return [0.25 * s, (m[2][1] - m[1][2]) / s, (m[0][2] - m[2][0]) / s, (m[1][0] - m[0][1]) / s];
+    }
+    if (m[0][0] > m[1][1] && m[0][0] > m[2][2]) {
+      s = Math.sqrt(1 + m[0][0] - m[1][1] - m[2][2]) * 2;
+      return [(m[2][1] - m[1][2]) / s, 0.25 * s, (m[0][1] + m[1][0]) / s, (m[0][2] + m[2][0]) / s];
+    }
+    if (m[1][1] > m[2][2]) {
+      s = Math.sqrt(1 + m[1][1] - m[0][0] - m[2][2]) * 2;
+      return [(m[0][2] - m[2][0]) / s, (m[0][1] + m[1][0]) / s, 0.25 * s, (m[1][2] + m[2][1]) / s];
+    }
+    s = Math.sqrt(1 + m[2][2] - m[0][0] - m[1][1]) * 2;
+    return [(m[1][0] - m[0][1]) / s, (m[0][2] + m[2][0]) / s, (m[1][2] + m[2][1]) / s, 0.25 * s];
+  }
+  function quat2mat(q) {
+    var w = q[0], x = q[1], y = q[2], z = q[3];
+    return [[1 - 2 * (y * y + z * z), 2 * (x * y - z * w), 2 * (x * z + y * w)],
+            [2 * (x * y + z * w), 1 - 2 * (x * x + z * z), 2 * (y * z - x * w)],
+            [2 * (x * z - y * w), 2 * (y * z + x * w), 1 - 2 * (x * x + y * y)]];
+  }
+  function slerp(q0, q1, t) {
+    var d = q0[0] * q1[0] + q0[1] * q1[1] + q0[2] * q1[2] + q0[3] * q1[3];
+    if (d < 0) { q1 = q1.map(function (c) { return -c; }); d = -d; }
+    var k0 = 1 - t, k1 = t;
+    if (d < 0.9995) {
+      var th = Math.acos(Math.max(-1, Math.min(1, d))), st = Math.sin(th);
+      k0 = Math.sin((1 - t) * th) / st; k1 = Math.sin(t * th) / st;
+    }
+    var q = q0.map(function (c, i) { return c * k0 + q1[i] * k1; });
+    var l = Math.hypot(q[0], q[1], q[2], q[3]);
+    return q.map(function (c) { return c / l; });
+  }
+
+  var LIGHT = nrm([-0.40, 0.50, 0.76]);
+  function shade(rgb, lam) {
+    return 'rgb(' + rgb.map(function (c) {
+      return Math.max(0, Math.min(255, Math.round(c * (0.86 + 0.14 * lam) + (255 - c) * 0.10 * lam)));
+    }).join(',') + ')';
+  }
+
+  // shared painter's-algorithm renderer for one <svg>
+  function Renderer(svg, colors) {
+    var R = 128, CX = 170, CY = 170, M = [[1, 0, 0], [0, 1, 0], [0, 0, 1]], pin = null;
+    var nodes = faces.map(function () {
+      var el = document.createElementNS(SVGNS, 'polygon');
+      el.setAttribute('class', 'aa-face');
+      svg.appendChild(el);
+      return el;
+    });
+    var pinEl = document.createElementNS(SVGNS, 'circle');
+    pinEl.setAttribute('class', 'aa-pin');
+    pinEl.setAttribute('r', '7');
+    pinEl.setAttribute('display', 'none');
+    svg.appendChild(pinEl);
+
+    function rot(v) {
+      return [M[0][0] * v[0] + M[0][1] * v[1] + M[0][2] * v[2],
+              M[1][0] * v[0] + M[1][1] * v[1] + M[1][2] * v[2],
+              M[2][0] * v[0] + M[2][1] * v[1] + M[2][2] * v[2]];
+    }
+    function draw() {
+      var p = verts.map(rot), vis = [];
+      faces.forEach(function (f, i) {
+        var n = nrm(rot(f.c));
+        if (n[2] <= 0.001) { nodes[i].setAttribute('display', 'none'); return; }
+        nodes[i].removeAttribute('display');
+        nodes[i].setAttribute('fill', shade(colors[i], Math.max(0, dot(n, LIGHT))));
+        nodes[i].setAttribute('points', f.v.map(function (k) {
+          return (CX + R * p[k][0]).toFixed(1) + ',' + (CY - R * p[k][1]).toFixed(1);
+        }).join(' '));
+        vis.push({ el: nodes[i], z: n[2] });
+      });
+      vis.sort(function (a, b) { return a.z - b.z; });
+      vis.forEach(function (o) { svg.appendChild(o.el); });
+      if (pin === null) { pinEl.setAttribute('display', 'none'); }
+      else {
+        var q = rot(faces[pin].c);
+        if (nrm(q)[2] <= 0.02) { pinEl.setAttribute('display', 'none'); }
+        else {
+          pinEl.removeAttribute('display');
+          pinEl.setAttribute('cx', (CX + R * q[0]).toFixed(1));
+          pinEl.setAttribute('cy', (CY - R * q[1]).toFixed(1));
+          svg.appendChild(pinEl);
+        }
+      }
+    }
+    return {
+      draw: draw,
+      get: function () { return M; },
+      set: function (m) { M = m; },
+      apply: function (A) { M = mul(A, M); },
+      setPin: function (k) { pin = k; },
+      colors: colors
+    };
+  }
+
+  function dragging(svg, r, onMove) {
+    var on = false, lx = 0, ly = 0;
+    svg.addEventListener('pointerdown', function (e) {
+      on = true; lx = e.clientX; ly = e.clientY;
+      try { svg.setPointerCapture(e.pointerId); } catch (err) {}
+      e.preventDefault();
+    });
+    svg.addEventListener('pointermove', function (e) {
+      if (!on) return;
+      r.apply(mul(rotX((e.clientY - ly) * 0.009), rotY((e.clientX - lx) * 0.009)));
+      lx = e.clientX; ly = e.clientY;
+      if (onMove) onMove();
+      r.draw();
+    });
+    ['pointerup', 'pointercancel'].forEach(function (t) {
+      svg.addEventListener(t, function () { on = false; });
+    });
+    return { held: function () { return on; } };
+  }
+
+  function palette(opts) {
+    return faces.map(function (f) {
+      if (f.kind === 'hex' && f.corner === 0) return [42, 120, 214];        // home
+      if (f.kind === 'tri' && f.corner === 0 && opts.yellow) return [227, 173, 43];
+      return f.kind === 'hex' ? [250, 248, 242] : [38, 37, 32];
+    });
+  }
+
+  // the two static figures: slow spin, drag to turn over
+  function init(svg, opts) {
+    var r = Renderer(svg, palette(opts));
+    r.set(mul(rotX(opts.pitch === undefined ? -0.45 : opts.pitch),
+              mul(rotY(opts.yaw || 0), basisTo(faces[0].c, [0, 1, 0]))));
+    var drag = dragging(svg, r);
+    var still = opts.still ||
+      (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    var seen = true;
+    if (window.IntersectionObserver) {
+      new IntersectionObserver(function (es) { seen = es[0].isIntersecting; }).observe(svg);
+    }
+    var prev = 0;
+    (function tick(ts) {
+      var dt = prev ? Math.min(0.05, (ts - prev) / 1000) : 0;
+      prev = ts;
+      if (!drag.held() && !still && seen) { r.apply(rotY(0.38 * dt)); r.draw(); }
+      requestAnimationFrame(tick);
+    })(0);
+    r.draw();
+  }
+
+  // the linked figure: turn the solid so hexagon k faces the reader
+  function mount(svg, opts) {
+    var r = Renderer(svg, palette(opts || {}));
+    var TILT = mul(rotX(-0.38), rotY(0.26));
+    function poseFor(k) { return mul(TILT, basisTo(faces[k].c, r.get()[1])); }
+    r.set(poseFor(0));
+    r.setPin(0);
+    var drag = dragging(svg, r, function () { anim = null; });
+    var anim = null;
+    (function tick(ts) {
+      if (anim) {
+        var u = Math.min(1, (ts - anim.t0) / anim.ms);
+        var e = u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;   // ease in-out
+        r.set(quat2mat(slerp(anim.q0, anim.q1, e)));
+        r.draw();
+        if (u >= 1) anim = null;
+      }
+      requestAnimationFrame(tick);
+    })(0);
+    r.draw();
+    return {
+      lookAt: function (k, snap) {
+        r.setPin(k);
+        var target = poseFor(k);
+        if (snap) { anim = null; r.set(target); r.draw(); return; }
+        anim = { q0: mat2quat(r.get()), q1: mat2quat(target), t0: performance.now(), ms: 460 };
+      },
+      draw: function () { r.draw(); }
+    };
+  }
+
+  return { init: init, mount: mount, hexNbrs: hexNbrs,
+           _t: { mat2quat: mat2quat, quat2mat: quat2mat, mul: mul, rotX: rotX, rotY: rotY } };
+})();
+{% endraw %}</script>

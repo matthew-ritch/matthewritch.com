@@ -2,6 +2,8 @@ theme: jekyll-theme-minimal
 markdown: kramdown
 highlighter: rouge
 url: https://matthewritch.com
+baseurl: ""
+repository: matthew-ritch/matthewritch.com
 permalink: pretty
 title: Matthew Ritch
 description: >-
@@ -20,4 +22,9 @@ exclude:
   - notes.txt
   - README.md
   - context
+  - logs
+  - scripts
+  - CLAUDE.md
+  - bin
+
   

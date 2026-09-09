@@ -3,7 +3,7 @@ layout: post
 title: "Jane Street's Robot Baseball Puzzle: Markov Games and Golden Section Search"
 date: 2026-07-22 17:00:00 -0400  
 categories: blog  
-tags: [puzzles, game theory, probability, baseball]
+tags: [puzzles, probability, optimization]
 excerpt: Solving Jane Street's Robot Baseball puzzle with Markov game analysis and golden section search, an enjoyable mix of symbolic math and numerical methods.
 image: /images/puz2_R.png
 ---
@@ -182,13 +182,6 @@ We can graph both expectations as functions of $$p$$:
 }
 .rb-fig svg { width: 100%; height: auto; overflow: visible; }
 .rb-fig figcaption { font-size: 0.85em; color: var(--rb-sec); margin-top: 0.6em; line-height: 1.4; }
-@media (prefers-color-scheme: dark) {
-  .rb-fig {
-    --rb-surface: #1a1a19; --rb-ink: #ffffff; --rb-sec: #c3c2b7; --rb-muted: #898781;
-    --rb-axis: #383835; --rb-s1: #3987e5; --rb-s2: #d95926;
-    --rb-tent: rgba(137,135,129,0.22);
-  }
-}
 </style>
 
 

@@ -1,0 +1,106 @@
+<style>
+.mp-figwrap {
+  --mp-surface: #fcfcfb; --mp-ink: #0b0b0b; --mp-sec: #52514e; --mp-muted: #898781;
+  --mp-axis: #3b3b39; --mp-grid: #ecebe3; --mp-zero: #c3c2b7; --mp-line: #e3e2da;
+  margin: 1.6em auto; max-width: 760px; text-align: center;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+.mp-fig { margin: 0 auto; max-width: 720px; text-align: center; }
+.mp-fig.mp-wide { max-width: 100%; overflow-x: auto; }
+.mp-fig .mp-plot {
+  width: 100%; height: auto; overflow: visible; display: block;
+  background: var(--mp-surface); border-radius: 6px;
+}
+.mp-row {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 8px; max-width: 100%;
+}
+.mp-row .mp-panel { margin: 0; max-width: none; }
+
+.mp-plot text { fill: var(--mp-sec); }
+.mp-plot .mp-facet { font-size: 11px; font-weight: 600; text-anchor: middle; fill: var(--mp-ink); }
+.mp-plot .mp-axis { font-size: 12px; text-anchor: middle; fill: var(--mp-sec); }
+.mp-plot .mp-tickL { font-size: 10px; text-anchor: end; fill: var(--mp-muted); }
+.mp-plot .mp-tickB { font-size: 10px; text-anchor: middle; fill: var(--mp-muted); }
+.mp-plot .mp-tickS { font-size: 9px; text-anchor: middle; fill: var(--mp-muted); }
+.mp-plot .mp-mtick { font-size: 6.5px; font-variant-numeric: tabular-nums; }
+.mp-plot .mp-mlabel { font-size: 8px; fill: var(--mp-sec); }
+.mp-plot .mp-nlabel { font-size: 8.5px; text-anchor: start; fill: var(--mp-muted); }
+.mp-plot .mp-grid { stroke: var(--mp-grid); stroke-width: 1; }
+.mp-plot .mp-zero { stroke: var(--mp-zero); stroke-width: 0.8; }
+.mp-plot .mp-ref { stroke: var(--mp-muted); stroke-width: 1; stroke-dasharray: 5 4; }
+.mp-plot .mp-ref2 { stroke: #111; stroke-width: 1; stroke-dasharray: 2 3; }
+.mp-plot .mp-err { stroke: #3b3b39; stroke-width: 1; }
+.mp-plot polyline, .mp-plot polygon, .mp-plot rect, .mp-plot circle { transition: none; }
+
+.mp-note { font-size: 0.8em; color: var(--mp-muted); margin: 0.5em 0 0.2em; }
+.mp-legend {
+  display: grid; grid-template-columns: repeat(var(--mp-cols, 4), auto);
+  gap: 0.15em 1.1em; justify-content: center; align-items: center;
+  margin: 0.5em auto 0; font-size: 0.8rem; color: var(--mp-sec); max-width: 100%;
+}
+.mp-key { display: inline-flex; align-items: center; gap: 0.4em; white-space: nowrap; }
+.mp-key-dot { width: 11px; height: 11px; border-radius: 50%; flex: none; }
+.mp-key-line { width: 16px; height: 0; flex: none; }
+
+/* --- 3d viewer --- */
+.mp-3d { position: relative; max-width: 640px; margin: 0 auto; }
+.mp-3d canvas {
+  width: 100%; height: auto; display: block; touch-action: none; cursor: grab;
+  background: var(--mp-surface); border-radius: 6px;
+}
+.mp-3d canvas:active { cursor: grabbing; }
+.mp-3d .mp-hint {
+  position: absolute; top: 8px; left: 10px; font-size: 0.78rem;
+  color: var(--mp-muted); pointer-events: none;
+}
+
+/* --- shared instant tooltip --- */
+.mp-tip {
+  position: fixed; z-index: 40; pointer-events: none; max-width: 22em;
+  padding: 0.32em 0.6em; font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 0.8rem; line-height: 1.35; color: #fcfcfb;
+  background: rgba(22, 19, 15, 0.94); border-radius: 4px;
+  opacity: 0; transition: opacity 0.08s linear;
+}
+.mp-tip[data-show] { opacity: 1; }
+</style>
+
+<script>{% raw %}
+(function () {
+  var tip = null;
+  function el() {
+    if (!tip) { tip = document.createElement('div'); tip.className = 'mp-tip'; document.body.appendChild(tip); }
+    return tip;
+  }
+  function place(e) {
+    var t = el(), pad = 14, x = e.clientX + pad, y = e.clientY + pad;
+    if (x + t.offsetWidth > window.innerWidth - 4) x = e.clientX - t.offsetWidth - pad;
+    if (y + t.offsetHeight > window.innerHeight - 4) y = e.clientY - t.offsetHeight - pad;
+    t.style.left = Math.max(4, x) + 'px'; t.style.top = Math.max(4, y) + 'px';
+  }
+  function show(text, e) { var t = el(); if (t.textContent !== text) t.textContent = text; t.setAttribute('data-show', ''); place(e); }
+  function hide() { if (tip) tip.removeAttribute('data-show'); }
+  function target(e) { return e.target && e.target.closest ? e.target.closest('[data-mp-tip]') : null; }
+  function prepare(fig) {
+    Array.prototype.forEach.call(fig.querySelectorAll('title'), function (node) {
+      var owner = node.parentNode; if (!owner || !owner.tagName) return;
+      var text = (node.textContent || '').trim(); if (!text) return;
+      if (owner.tagName.toLowerCase() === 'svg') { owner.removeAttribute('aria-labelledby'); }
+      else { owner.setAttribute('data-mp-tip', text); }
+      if (!owner.hasAttribute('aria-label')) owner.setAttribute('aria-label', text);
+      owner.removeChild(node);
+    });
+    fig.addEventListener('pointerover', function (e) { var h = target(e); if (h) show(h.getAttribute('data-mp-tip'), e); });
+    fig.addEventListener('pointermove', function (e) { var h = target(e); if (h) show(h.getAttribute('data-mp-tip'), e); else hide(); });
+    fig.addEventListener('pointerleave', hide);
+  }
+  function init() {
+    Array.prototype.forEach.call(document.querySelectorAll('.mp-figwrap .mp-plot'), prepare);
+    window.addEventListener('scroll', hide, { passive: true });
+  }
+  window.ManneredTip = { show: show, hide: hide };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+{% endraw %}</script>

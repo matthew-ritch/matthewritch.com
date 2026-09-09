@@ -1,0 +1,188 @@
+<style>
+.lsl-fig {
+  --lsl-surface: #fcfcfb; --lsl-ink: #0b0b0b; --lsl-sec: #52514e; --lsl-muted: #898781;
+  --lsl-axis: #c3c2b7; --lsl-grid: #ecebe3; --lsl-dark: #16130f; --lsl-line: #e3e2da;
+  --lsl-road: #2a78d6; --lsl-cloud: #8b96a4; --lsl-accent: #eb6834; --lsl-inter: #12b5c4;
+  margin: 1.6em auto; max-width: 720px; text-align: center;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+.lsl-fig svg {
+  width: 100%; height: auto; overflow: visible; display: block;
+  background: var(--lsl-surface); border-radius: 6px;
+}
+.lsl-row {
+  display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;
+  max-width: 960px; margin: 1.6em auto;
+}
+.lsl-row .lsl-fig { flex: 1 1 240px; margin: 0; }
+
+/* --- scatter cloud --- */
+.lsl-fig .lsl-cloud circle {
+  fill: var(--lsl-cloud); fill-opacity: 0.5; stroke: var(--lsl-surface);
+  stroke-width: 0.35; transition: fill-opacity 0.1s, r 0.1s;
+}
+.lsl-fig .lsl-cloud circle:hover { fill-opacity: 1; fill: var(--lsl-accent); }
+
+/* --- Pareto fronts: dark for longest-straightest, orange for shortest-curviest --- */
+.lsl-fig .lsl-front-line { stroke: var(--lsl-dark); stroke-width: 2; stroke-dasharray: 6 4; }
+.lsl-fig .lsl-front circle, .lsl-fig .lsl-front-dot {
+  fill: var(--lsl-dark); stroke: var(--lsl-surface); stroke-width: 1.2;
+  cursor: pointer; transition: fill 0.1s, r 0.1s;
+}
+.lsl-fig .lsl-front-item:hover circle:not(.lsl-hit) { fill: var(--lsl-accent); }
+.lsl-fig .lsl-front2-line { stroke: var(--lsl-accent); stroke-width: 2; stroke-dasharray: 6 4; }
+.lsl-fig .lsl-front2 circle, .lsl-fig .lsl-front2-dot {
+  fill: var(--lsl-accent); stroke: var(--lsl-surface); stroke-width: 1.2;
+  cursor: pointer; transition: fill 0.1s, r 0.1s;
+}
+.lsl-fig .lsl-front2-item:hover circle:not(.lsl-hit) { fill: var(--lsl-dark); }
+
+/* --- histograms --- */
+.lsl-fig .lsl-bars rect { fill: var(--lsl-road); fill-opacity: 0.85; transition: fill 0.1s; }
+.lsl-fig .lsl-bars rect:hover { fill: var(--lsl-accent); fill-opacity: 1; }
+
+/* --- curvature example: the road, its endpoint chord, and the rungs between --- */
+.lsl-fig .lsl-road { stroke: var(--lsl-road); }
+.lsl-fig .lsl-chord { stroke: var(--lsl-accent); stroke-width: 2.4; }
+.lsl-fig .lsl-rung { stroke: #3b3b39; }
+.lsl-fig .lsl-rung line { stroke: #3b3b39; stroke-width: 0.9; stroke-dasharray: 3 3; }
+
+/* --- maps --- */
+.lsl-fig .lsl-map path { vector-effect: non-scaling-stroke; }
+.lsl-fig .lsl-map .lsl-road { stroke: var(--lsl-road); stroke-linejoin: round; stroke-linecap: round; }
+.lsl-fig .lsl-inter { stroke: var(--lsl-inter); stroke-linejoin: round; stroke-linecap: round; }
+.lsl-fig .lsl-cand {
+  stroke: var(--lsl-dark); stroke-linecap: round; cursor: pointer;
+  transition: stroke 0.1s, stroke-width 0.1s;
+}
+.lsl-fig .lsl-cand-item:hover path:not(.lsl-hit) { stroke: var(--lsl-accent); stroke-width: 4; }
+.lsl-fig .lsl-cand2 {
+  stroke: var(--lsl-accent); stroke-linecap: round; cursor: pointer;
+  transition: stroke 0.1s, stroke-width 0.1s;
+}
+.lsl-fig .lsl-cand2-item:hover path:not(.lsl-hit) { stroke: var(--lsl-dark); stroke-width: 4; }
+
+/* A 2px road and a 3.6px dot are near-impossible to point at, so every one of
+   them carries an invisible twin that is fat enough to hit. */
+.lsl-fig path.lsl-hit {
+  fill: none; stroke: transparent; stroke-width: 12;
+  stroke-linecap: round; stroke-linejoin: round; pointer-events: stroke;
+}
+.lsl-fig circle.lsl-hit { fill: none; stroke: none; pointer-events: all; }
+
+/* the legend sits under the map, with a halo in case a road creeps into it */
+.lsl-fig .lsl-legend text {
+  paint-order: stroke fill; stroke: var(--lsl-surface); stroke-width: 3px;
+}
+
+/* --- instant tooltip (see the script below) --- */
+.lsl-tip {
+  position: fixed; z-index: 40; pointer-events: none;
+  max-width: 22em; padding: 0.32em 0.6em;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 0.8rem; line-height: 1.35; color: #fcfcfb;
+  background: rgba(22, 19, 15, 0.94); border-radius: 4px;
+  opacity: 0; transition: opacity 0.08s linear;
+}
+.lsl-tip[data-show] { opacity: 1; }
+
+/* --- candidate tables --- */
+.lsl-wrap { overflow-x: auto; margin: 1.6em 0; }
+.lsl-table {
+  border-collapse: collapse; margin: 0 auto; font-size: 0.92em;
+  color: #1a1a19; font-variant-numeric: tabular-nums;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+.lsl-table th, .lsl-table td { padding: 0.32em 0.9em; border: 1px solid var(--lsl-line); }
+.lsl-table thead th { background: rgba(137, 135, 129, 0.12); font-weight: 600; }
+.lsl-table td.num { text-align: right; }
+.lsl-table tbody tr:hover { background: rgba(235, 104, 52, 0.08); }
+</style>
+
+<script>{% raw %}
+// A native SVG <title> only surfaces after the browser's hover delay, so every
+// title in these figures is lifted onto its element and rendered by one shared
+// tooltip that appears the moment the pointer lands.
+(function () {
+  var tip = null;
+
+  function el() {
+    if (!tip) {
+      tip = document.createElement('div');
+      tip.className = 'lsl-tip';
+      document.body.appendChild(tip);
+    }
+    return tip;
+  }
+
+  function place(e) {
+    var t = el(), pad = 14, x = e.clientX + pad, y = e.clientY + pad;
+    if (x + t.offsetWidth > window.innerWidth - 4) x = e.clientX - t.offsetWidth - pad;
+    if (y + t.offsetHeight > window.innerHeight - 4) y = e.clientY - t.offsetHeight - pad;
+    t.style.left = Math.max(4, x) + 'px';
+    t.style.top = Math.max(4, y) + 'px';
+  }
+
+  function show(text, e) {
+    var t = el();
+    if (t.textContent !== text) t.textContent = text;
+    t.setAttribute('data-show', '');
+    place(e);
+  }
+
+  function hide() { if (tip) tip.removeAttribute('data-show'); }
+
+  function target(e) {
+    return e.target && e.target.closest ? e.target.closest('[data-lsl-tip]') : null;
+  }
+
+  function prepare(fig) {
+    // Every <title> becomes an attribute. A figure-wide one on the <svg> would
+    // hover on top of the per-shape names, so it turns into the accessible name
+    // only; the rest become tooltip text.
+    Array.prototype.forEach.call(fig.querySelectorAll('title'), function (node) {
+      var owner = node.parentNode;
+      if (!owner || !owner.tagName) return;
+      var text = (node.textContent || '').trim();
+      if (!text) return;
+      if (owner.tagName.toLowerCase() === 'svg') {
+        owner.removeAttribute('aria-labelledby');
+      } else {
+        owner.setAttribute('data-lsl-tip', text);
+      }
+      if (!owner.hasAttribute('aria-label')) owner.setAttribute('aria-label', text);
+      owner.removeChild(node);
+    });
+
+    fig.addEventListener('pointerover', function (e) {
+      var hit = target(e);
+      if (hit) show(hit.getAttribute('data-lsl-tip'), e);
+    });
+    fig.addEventListener('pointermove', function (e) {
+      var hit = target(e);
+      if (hit) show(hit.getAttribute('data-lsl-tip'), e); else hide();
+    });
+    fig.addEventListener('pointerdown', function (e) {
+      var hit = target(e);
+      if (hit) show(hit.getAttribute('data-lsl-tip'), e);
+    });
+    fig.addEventListener('pointerleave', hide);
+    fig.addEventListener('pointercancel', hide);
+  }
+
+  function init() {
+    // .lsl-row only wraps .lsl-fig children, so it needs no listeners of its own
+    Array.prototype.forEach.call(document.querySelectorAll('.lsl-fig'), prepare);
+    window.addEventListener('scroll', hide, { passive: true });
+  }
+
+  window.LSLTip = { show: show, hide: hide };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+
+{% endraw %}</script>

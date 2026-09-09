@@ -1,0 +1,8 @@
+- Default to ~200 words or less
+- Lead with the conclusion in the first sentence
+- No preamble or recap of what I said
+- No "net/bottom line" wrap-up
+- State each point only once
+- Use a short table or tight bullets over prose paragraphs
+- Skip caveats unless they change the decision
+- Only exceed the budget when I ask to "go deep" 

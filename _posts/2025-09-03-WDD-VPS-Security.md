@@ -3,7 +3,7 @@ layout: post
 title: "Web Dev for Dirtbags Part 3: VPS Security"
 date: 2025-09-03 08:00:00 -0400  
 categories: blog  
-tags: [web development, nginx, digitalocean, ssh, security, dirtbag]
+tags: [web development, dirtbag]
 excerpt: Learn some easy steps to harden your web server's security.
 ---
 

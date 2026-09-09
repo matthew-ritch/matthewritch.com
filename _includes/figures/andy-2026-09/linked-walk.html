@@ -1,0 +1,175 @@
+<figure class="aa-fig">
+  <div class="aa-linked">
+    <div class="aa-floor"><header>Click me!</header><svg id="aa-walk-floor" viewBox="0 0 320 320" xmlns="http://www.w3.org/2000/svg" role="img"></svg></div>
+    <div class="aa-ball"><header>Drag me!</header><svg id="aa-walk-ball" viewBox="0 0 340 340" xmlns="http://www.w3.org/2000/svg" role="img"></svg></div>
+  </div>
+  <button class="aa-reset" type="button" id="aa-walk-reset" aria-label="Start the walk over">&#8634;</button>
+</figure>
+
+<script>{% raw %}
+(function () {
+  var SVGNS = 'http://www.w3.org/2000/svg';
+  var floorSvg = document.getElementById('aa-walk-floor');
+  var link = floorSvg.closest('.aa-linked');
+  var ball = AndyTT.mount(document.getElementById('aa-walk-ball'), {});
+
+  var S = 22, CX = 160, CY = 160, SQ3 = Math.sqrt(3), DRAW = 8, REACH = 7;
+  var DIRS = [[1, 0], [1, -1], [0, -1], [-1, 0], [-1, 1], [0, 1]];
+  var C_WHITE = '#faf8f2', C_WHITE_E = '#dedacc', C_BLACK = '#26251f';
+  var C_HOME = '#2a78d6', C_HOME_E = '#1b5aa6', C_FAKE = '#cf4a3c', C_FAKE_E = '#a3372c';
+
+  function key(h) { return h[0] + ',' + h[1]; }
+  function isBlack(h) { return ((h[0] - h[1]) % 3 + 3) % 3 === 1; }
+  function ring(h) { return Math.max(Math.abs(h[0]), Math.abs(h[1]), Math.abs(h[0] + h[1])); }
+  function xy(h) { return [CX + 1.5 * S * h[0], CY + SQ3 * S * (h[1] + h[0] / 2)]; }
+  function nbrs(h) { return DIRS.map(function (d) { return [h[0] + d[0], h[1] + d[1]]; }); }
+
+  // the three white neighbours, counter-clockwise as they appear on screen —
+  // the same turn order the solid's hexagons are listed in
+  function order(h) {
+    var c = xy(h);
+    return nbrs(h).filter(function (n) { return !isBlack(n); }).sort(function (a, b) {
+      function ang(t) {
+        var p = xy(t);
+        return (Math.atan2(-(p[1] - c[1]), p[0] - c[0]) + 2 * Math.PI) % (2 * Math.PI);
+      }
+      return ang(a) - ang(b);
+    });
+  }
+  function hexPts(h) {
+    var c = xy(h), out = [];
+    for (var k = 0; k < 6; k++) {
+      out.push((c[0] + S * Math.cos(k * Math.PI / 3)).toFixed(1) + ',' +
+               (c[1] + S * Math.sin(k * Math.PI / 3)).toFixed(1));
+    }
+    return out.join(' ');
+  }
+
+  var clip = document.createElementNS(SVGNS, 'clipPath');
+  clip.setAttribute('id', 'aa-walk-clip');
+  var clipR = document.createElementNS(SVGNS, 'rect');
+  clipR.setAttribute('x', '1'); clipR.setAttribute('y', '1');
+  clipR.setAttribute('width', '318'); clipR.setAttribute('height', '318');
+  clipR.setAttribute('rx', '4');
+  clip.appendChild(clipR); floorSvg.appendChild(clip);
+
+  var view = document.createElementNS(SVGNS, 'g');
+  view.setAttribute('clip-path', 'url(#aa-walk-clip)');
+  floorSvg.appendChild(view);
+  var pan = document.createElementNS(SVGNS, 'g'); view.appendChild(pan);
+  var tileG = document.createElementNS(SVGNS, 'g'); pan.appendChild(tileG);
+  var overG = document.createElementNS(SVGNS, 'g'); pan.appendChild(overG);
+
+  var tiles = {};
+  for (var q = -DRAW; q <= DRAW; q++) {
+    for (var r = -DRAW; r <= DRAW; r++) {
+      var h = [q, r];
+      if (ring(h) > DRAW) continue;
+      var el = document.createElementNS(SVGNS, 'polygon');
+      el.setAttribute('points', hexPts(h));
+      el.setAttribute('stroke-width', '1.2');
+      tileG.appendChild(el);
+      tiles[key(h)] = { el: el, h: h };
+      if (!isBlack(h) && ring(h) <= REACH) {
+        el.setAttribute('data-h', key(h));
+        (function (hh) {
+          el.addEventListener('click', function () { step(hh); });
+        })(h);
+      }
+    }
+  }
+
+  var trail = document.createElementNS(SVGNS, 'polyline');
+  trail.setAttribute('class', 'aa-step'); overG.appendChild(trail);
+  var pin = document.createElementNS(SVGNS, 'circle');
+  pin.setAttribute('class', 'aa-pin'); pin.setAttribute('r', '7');
+  var cand = [];
+  for (var i = 0; i < 3; i++) {
+    var cc = document.createElementNS(SVGNS, 'polygon');
+    cc.setAttribute('class', 'aa-open'); overG.appendChild(cc); cand.push(cc);
+  }
+  overG.appendChild(pin);
+
+  var st, path, found, px = 0, py = 0, tx = 0, ty = 0;
+
+  function reset(snap) {
+    st = { tile: [0, 0], fi: 0, hex: 0, si: 0 };
+    path = [[0, 0]];
+    found = {};
+    px = py = tx = ty = 0;                     // starting over re-centres on home
+    pan.setAttribute('transform', 'translate(0,0)');
+    link.classList.add('aa-fresh');
+    ball.lookAt(0, snap);
+    render();
+  }
+
+  function step(target) {
+    var o = order(st.tile), j = -1;
+    for (var i = 0; i < 3; i++) if (key(o[i]) === key(target)) j = i;
+    if (j < 0) return;                                   // not a legal single step
+    var turn = ((j - st.fi) % 3 + 3) % 3;
+    var hex = AndyTT.hexNbrs[st.hex][((st.si + turn) % 3 + 3) % 3];
+    var back = st.tile;
+    st = {
+      tile: target,
+      fi: order(target).map(key).indexOf(key(back)),
+      hex: hex,
+      si: AndyTT.hexNbrs[hex].indexOf(st.hex)
+    };
+    path.push(target);
+    link.classList.remove('aa-fresh');
+    if (hex === 0 && key(target) !== '0,0') found[key(target)] = true;
+    ball.lookAt(hex);
+    repan();
+    render();
+  }
+
+  function repan() {
+    var p = xy(st.tile), dx = p[0] + px - CX, dy = p[1] + py - CY;
+    var d = Math.hypot(dx, dy), lim = 62;
+    if (d > lim) { var k = (d - lim) / d; tx = px - dx * k; ty = py - dy * k; }
+  }
+
+  function render() {
+    Object.keys(tiles).forEach(function (k) {
+      var t = tiles[k], fill = C_WHITE, edge = C_WHITE_E;
+      if (isBlack(t.h)) { fill = C_BLACK; edge = C_BLACK; }
+      else if (k === '0,0') { fill = C_HOME; edge = C_HOME_E; }
+      else if (found[k]) { fill = C_FAKE; edge = C_FAKE_E; }
+      t.el.setAttribute('fill', fill);
+      t.el.setAttribute('stroke', edge);
+    });
+    trail.setAttribute('points', path.map(function (h) {
+      var p = xy(h); return p[0].toFixed(1) + ',' + p[1].toFixed(1);
+    }).join(' '));
+    var o = order(st.tile);
+    cand.forEach(function (c, i) {
+      if (o[i] && ring(o[i]) <= REACH) {
+        c.removeAttribute('display');
+        c.setAttribute('points', hexPts(o[i]));
+      } else { c.setAttribute('display', 'none'); }
+    });
+    var p = xy(st.tile);
+    pin.setAttribute('cx', p[0].toFixed(1));
+    pin.setAttribute('cy', p[1].toFixed(1));
+  }
+
+  (function ease() {                        // slide the floor to follow Andy
+    if (px !== tx || py !== ty) {
+      if (Math.abs(tx - px) < 0.15 && Math.abs(ty - py) < 0.15) { px = tx; py = ty; }
+      else { px += (tx - px) * 0.16; py += (ty - py) * 0.16; }
+      pan.setAttribute('transform', 'translate(' + px.toFixed(1) + ',' + py.toFixed(1) + ')');
+    }
+    requestAnimationFrame(ease);
+  })();
+
+  document.getElementById('aa-walk-reset').addEventListener('click', function () { reset(false); });
+  reset(true);
+
+  var frame = document.createElementNS(SVGNS, 'rect');
+  frame.setAttribute('x', '1'); frame.setAttribute('y', '1');
+  frame.setAttribute('width', '318'); frame.setAttribute('height', '318');
+  frame.setAttribute('rx', '4'); frame.setAttribute('class', 'aa-frame');
+  floorSvg.appendChild(frame);
+})();
+{% endraw %}</script>
