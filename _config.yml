@@ -26,5 +26,6 @@ exclude:
   - scripts
   - CLAUDE.md
   - bin
+  - docs
 
   
